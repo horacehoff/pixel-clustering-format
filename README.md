@@ -4,7 +4,7 @@ LPI is an image format that works by grouping pixels together in clusters that r
 
 It uses "layers" to store pixels, that is it completely disregards the pixels of the dominant color in the image, using it as a background. Then, it fills in the image using the other colors, thus allowing for a very efficient lossless compression.
 
-On images where it works best, LPI offers a great compression level, sometimes being as much as 99% smaller than the original PNG image. However, it poorly compresses colors and their relation with pixels and as such, LPI works best with images that don't have a ton of colors and/or that have a high pixel/color ratio. Examples below. 
+On images where it works best, LPI offers a great compression level, sometimes being as much as 99% smaller than the original PNG image. However, it poorly compresses colors and their relation with pixels and as such, LPI works best with images that don't have a ton of colors and/or that have a high pixel/color ratio. Examples below (the graphs in the .LPI format are 47% to 62% smaller than their heavily optimized PNG original counterparts).
 
 LPI supports transparency, and first reads colors in the RGBA format and then stores them in the hexadecimal format.
 
