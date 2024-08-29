@@ -25,7 +25,7 @@ positional arguments:
 options:
   -o, --output    The .lpi output file
   -v, --verbose
-  -d, --dev       Disable LZMA compression (makes the file readable)
+  -d, --dev       Disable LZMA compression (makes the file human-readable)
 """
 
 
