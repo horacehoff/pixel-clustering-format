@@ -1,4 +1,4 @@
-# Lossless Pixel-Clustering Image Format (LPI)
+# Pixel-Clustering Image Format (.LPI)
 ### About
 LPI is an image format that works by grouping pixels together in clusters that rely on simple additions and multiplications for compression, and grouping them by color.
 
