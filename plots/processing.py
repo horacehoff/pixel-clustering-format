@@ -16,9 +16,9 @@ except:
 tot_sum = 0
 for index, x in enumerate(files):
     originals.append(path.getsize(folder + x))
-    convert.convert(folder + x, True, "output.lpi")
-    transformed.append(path.getsize("output.lpi"))
-    tot_sum += int(path.getsize("output.lpi") * 100 / path.getsize(folder + x))
+    convert.convert(folder + x, True, "output.pcf")
+    transformed.append(path.getsize("output.pcf"))
+    tot_sum += int(path.getsize("output.pcf") * 100 / path.getsize(folder + x))
     print(index+1, "/", len(files))
     print(transformed)
 

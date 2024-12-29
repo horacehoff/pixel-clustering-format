@@ -23,26 +23,26 @@ for (originals, transformed, names) in zip(originals_split, transformed_split, n
     chunkindex += 1
     barWidth = 1
     png_bar = []
-    lpi_bar = []
-    png_lpi_bar = []
+    pcf_bar = []
+    png_pcf_bar = []
     for i, x in enumerate(originals):
         png_bar.append(x / 1000)
-        lpi_bar.append(transformed[i] / 1000)
-        png_lpi_bar.append(x / 1000)
-        png_lpi_bar.append(transformed[i] / 1000)
+        pcf_bar.append(transformed[i] / 1000)
+        png_pcf_bar.append(x / 1000)
+        png_pcf_bar.append(transformed[i] / 1000)
 
     png_bar_pos = []
-    lpi_bar_pos = []
+    pcf_bar_pos = []
     for i in range(len(originals+transformed)):
         if (i % 2) == 0:
             png_bar_pos.append(i+1)
         else:
-            lpi_bar_pos.append(i+1)
+            pcf_bar_pos.append(i+1)
 
     all_bar_pos = range(len(originals+transformed))
 
     plt.bar(png_bar_pos, png_bar, width=barWidth, color='r', label='.PNG')
-    plt.bar(lpi_bar_pos, lpi_bar, width=barWidth, color='b', label='.LPI')
+    plt.bar(pcf_bar_pos, pcf_bar, width=barWidth, color='b', label='.PCF')
 
     plt.legend()
 
@@ -69,7 +69,7 @@ for (originals, transformed, names) in zip(originals_split, transformed_split, n
             label.append(transformed[x] / 1000)
 
     for i in range(len(all_bar_pos)):
-        plt.text(x=all_bar_pos[i] + 0.5, y=png_lpi_bar[i] + 0.1, s=label[i], size=6)
+        plt.text(x=all_bar_pos[i] + 0.5, y=png_pcf_bar[i] + 0.1, s=label[i], size=6)
 
     plt.savefig("fig"+str(chunkindex)+".png", dpi=1000, pad_inches=0, bbox_inches="tight")
     plt.clf()

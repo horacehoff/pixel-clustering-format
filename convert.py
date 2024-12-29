@@ -1,16 +1,16 @@
 """
-Lossless Pixel-Clustering Image Format (LPI)
+Pixel-Clustering Image Format (PCF)
 
 
 
 
-LPI is an image format that works by grouping pixels together in clusters that rely on simple additions and multiplications for compression, and grouping them by color.
+PCF is an image format that works by grouping pixels together in clusters that rely on simple additions and multiplications for compression, and grouping them by color.
 
 It uses "layers" to store pixels, that is it completely disregards the pixels of the dominant color in the image, using it as a background. Then, it fills in the image using the other colors, thus allowing for a very efficient lossless compression.
 
-However, it poorly compresses colors and their relation with pixels and as such, LPI works best with images that don't have a ton of colors and/or that have a high pixel/color ratio.
+However, it poorly compresses colors and their relation with pixels and as such, PCF works best with images that don't have a ton of colors and/or that have a high pixel/color ratio.
 
-LPI supports transparency, and first reads colors in the RGBA format and then stores the colors in the hexadecimal format.
+PCF supports transparency, and first reads colors in the RGBA format and then stores the colors in the hexadecimal format.
 
 
 
@@ -23,7 +23,7 @@ positional arguments:
   filename
 
 options:
-  -o, --output    The .lpi output file
+  -o, --output    The .pcf output file
   -v, --verbose
   -d, --dev       Disable LZMA compression (makes the file human-readable)
 """
@@ -293,10 +293,10 @@ def convert(filename, verbose, output, dev=None):
 
 
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser(description='Converts any image file to the LPI format')
+    parser = argparse.ArgumentParser(description='Converts any image file to the pcf format')
 
     parser.add_argument("filename")
-    parser.add_argument("-o", "--output", default="output.lpi", help="The .lpi output file")
+    parser.add_argument("-o", "--output", default="output.pcf", help="The .pcf output file")
     parser.add_argument("-v", "--verbose", action="store_true")
     parser.add_argument("-d", "--dev", action="store_true", help="")
 
