@@ -27,21 +27,22 @@ options:
   -v, --verbose
   -d, --dev       Disable LZMA compression (makes the file human-readable)
 """
-
-
+from multiprocessing import Pool, cpu_count
 from PIL import Image
 import lzma
 from statistics import mode
 import argparse
 from sys import getsizeof
 from collections import defaultdict
+from numba import jit
+from concurrent.futures import ProcessPoolExecutor
 
 
 Image.MAX_IMAGE_PIXELS = None
 
 
 # import line_profiler
-# import os
+import os
 # os.environ["LINE_PROFILE"] = "1"
 
 
@@ -50,7 +51,6 @@ def compress(data):
         return lzma.compress(data.encode("utf-8"), check=lzma.CHECK_CRC64, preset=9)
     except:
         return lzma.compress(data, check=lzma.CHECK_CRC64, preset=9)
-
 
 
 def process_sequence(sequence):
@@ -144,72 +144,99 @@ def shorthand_hex_color(color):
         return f"#{compressed}{a}"
 
 
-def calculate_potential_savings_by_vars(txt):
-    snake_pos = 0
-    hashes = []
-    seen = set()
+# def calculate_potential_savings_by_vars(txt):
+#     snake_pos = 0
+#     hashes = []
+#     seen = set()
+#
+#     print("Indexing all hashes...")
+#     for i in txt:
+#         for j in range(0, len(txt) - snake_pos):
+#             substring = txt[snake_pos:snake_pos + j]
+#             if substring not in seen:
+#                 seen.add(substring)
+#                 hashes.append((substring, snake_pos, snake_pos + j))
+#         snake_pos += 1
+#     print("Removed duplicate hashes")
+#     occurrences = {}
+#     hashes_length = len(hashes)
+#
+#     for i, (substring, start, end) in enumerate(hashes):
+#         print(f"Processing hash {i + 1}/{hashes_length}", end="\r")
+#         tot_count = txt.count(substring)
+#
+#         if tot_count > 1 and substring and len(substring) * tot_count > (
+#                 len(f'v{i + 1}:{substring}') + len(f'v{i + 1}') * tot_count):
+#             occurrences[substring] = (tot_count, start, end)
+#
+#     # sort occurences by length of key * occurences
+#     occurrences = dict(sorted(occurrences.items(), key=lambda item: len(item[0]) * item[1][0], reverse=True))
+#
+#     # remove all keys that have overlapping start and end indexes
+#     print("Removing overlapping keys...")
+#     for key in list(occurrences.keys()):
+#         print("Progress: ", round((list(occurrences.keys()).index(key) / len(occurrences.keys())) * 100, 2), "%",
+#               end="\r")
+#         start = occurrences[key][1]
+#         end = occurrences[key][2]
+#         for key2 in list(occurrences.keys()):
+#             if key != key2:
+#                 if occurrences[key2][1] <= start <= occurrences[key2][2]:
+#                     del occurrences[key]
+#                     break
+#                 if occurrences[key2][1] <= end <= occurrences[key2][2]:
+#                     del occurrences[key]
+#                     break
+#
+#     space_savings = 0
+#     i = 0
+#     for key in occurrences:
+#         i += 1
+#         space_savings += len(key) * occurrences[key][0] - (
+#                     len('v' + str(i) + ':' + str(occurrences[key])) + (len('v' + str(i)) * occurrences[key][0]))
+#     print("Potential space savings: " + str(space_savings) + " bytes")
 
-    print("Indexing all hashes...")
-    for i in txt:
-        for j in range(0, len(txt) - snake_pos):
-            substring = txt[snake_pos:snake_pos + j]
-            if substring not in seen:
-                seen.add(substring)
-                hashes.append((substring, snake_pos, snake_pos + j))
-        snake_pos += 1
-    print("Removed duplicate hashes")
-    occurrences = {}
-    hashes_length = len(hashes)
 
-    for i, (substring, start, end) in enumerate(hashes):
-        print(f"Processing hash {i + 1}/{hashes_length}", end="\r")
-        tot_count = txt.count(substring)
+def list_to_chunks(array, chunk_size):
+    for i in range(0, len(array), chunk_size):
+        yield array[i:i + chunk_size]
 
-        if tot_count > 1 and substring and len(substring) * tot_count > (len(f'v{i + 1}:{substring}') + len(f'v{i + 1}') * tot_count):
-            occurrences[substring] = (tot_count, start, end)
 
-    # sort occurences by length of key * occurences
-    occurrences = dict(sorted(occurrences.items(), key=lambda item: len(item[0]) * item[1][0], reverse=True))
+def load_height_pixels(filename, width, height, verbose):
+    # filename, width, height, verbose = args
+    img = Image.open(filename).convert("RGBA")
+    pixels = []
+    for x in width:
+        for y in range(height):
+            px = img.getpixel((x, y))
+            pixels.append((shorthand_hex_color('#%02x%02x%02x%02x' % px), x, y))
+    if verbose:
+        print("PROCESS N."+str(os.getpid())+" INDEXED CHUNK...")
 
-    # remove all keys that have overlapping start and end indexes
-    print("Removing overlapping keys...")
-    for key in list(occurrences.keys()):
-        print("Progress: ", round((list(occurrences.keys()).index(key) / len(occurrences.keys())) * 100, 2), "%", end="\r")
-        start = occurrences[key][1]
-        end = occurrences[key][2]
-        for key2 in list(occurrences.keys()):
-            if key != key2:
-                if occurrences[key2][1] <= start <= occurrences[key2][2]:
-                    del occurrences[key]
-                    break
-                if occurrences[key2][1] <= end <= occurrences[key2][2]:
-                    del occurrences[key]
-                    break
-
-    space_savings = 0
-    i = 0
-    for key in occurrences:
-        i += 1
-        space_savings += len(key) * occurrences[key][0] - (len('v' + str(i) + ':' + str(occurrences[key])) + (len('v' + str(i)) * occurrences[key][0]))
-    print("Potential space savings: "+str(space_savings)+" bytes")
-
+    return pixels
 
 
 
 def convert(filename, verbose, output, dev=None):
+    if verbose:
+        print("OPENING IMAGE AND CONVERTING TO RGBA...")
     img = Image.open(filename).convert("RGBA")
     width = img.size[0]
     height = img.size[1]
 
-    pixels = []
 
     if verbose:
         print("INDEXING PIXELS...")
-    for x in range(width):
-        for y in range(height):
-            px = img.getpixel((x, y))
-            pixels.append((shorthand_hex_color('#%02x%02x%02x%02x' % px), x, y))
-            # pixels.append(('#%02x%02x%02x%02x' % px, x, y))
+    split_width = list_to_chunks(range(width), int(width / cpu_count()))
+    if verbose:
+        print("PROCESSING CHUNKS...")
+
+
+
+    with Pool() as pool:
+        pixels = [pixel for result in pool.starmap(load_height_pixels, [(filename, width, height, verbose) for width in split_width]) for pixel in result]
+
+
     if verbose:
         print("INDEXING COLORS...")
 
@@ -283,12 +310,14 @@ def convert(filename, verbose, output, dev=None):
         compressed = compress(outputf)
         output.write(compressed)
         with open(filename, "rb") as f:
-            print("\nSAVED TO "+str(output.name)+" -- "+str(round(getsizeof(compressed) * 100 / getsizeof(f.read())))+"% OF ORIGINAL SIZE")
+            print("\nSAVED TO " + str(output.name) + " -- " + str(
+                round(getsizeof(compressed) * 100 / getsizeof(f.read()))) + "% OF ORIGINAL SIZE")
             return round(getsizeof(compressed) * 100 / getsizeof(f.read()))
     else:
         output.write(outputf.encode("utf-8"))
         with open(filename, "rb") as f:
-            print("\nSAVED TO "+str(output.name)+" -- "+str(round(getsizeof(outputf.encode("utf-8")) * 100 / getsizeof(f.read())))+"% OF ORIGINAL SIZE")
+            print("\nSAVED TO " + str(output.name) + " -- " + str(
+                round(getsizeof(outputf.encode("utf-8")) * 100 / getsizeof(f.read()))) + "% OF ORIGINAL SIZE")
             return round(getsizeof(outputf.encode("utf-8")) * 100 / getsizeof(f.read()))
 
 

@@ -1,16 +1,16 @@
 """
-Lossless Pixel-Clustering Image Format (LPI)
+Pixel-Clustering Image Format (PCF)
 
 
 
 
-LPI is an image format that works by grouping pixels together in clusters that rely on simple additions and multiplications for compression, and grouping them by color.
+PCF is an image format that works by grouping pixels together in clusters that rely on simple additions and multiplications for compression, and grouping them by color.
 
 It uses "layers" to store pixels, that is it completely disregards the pixels of the dominant color in the image, using it as a background. Then, it fills in the image using the other colors, thus allowing for a very efficient lossless compression.
 
-However, it poorly compresses colors and their relation with pixels and as such, LPI works best with images that don't have a ton of colors and/or that have a high pixel/color ratio.
+However, it poorly compresses colors and their relation with pixels and as such, PCF works best with images that don't have a ton of colors and/or that have a high pixel/color ratio.
 
-LPI supports transparency, and first reads colors in the RGBA format and then stores the colors in the hexadecimal format.
+PCF supports transparency, and first reads colors in the RGBA format and then stores the colors in the hexadecimal format.
 
 
 
@@ -179,7 +179,7 @@ def back_convert(file_name):
 
 
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser(description='Converts any image file from the LPI format to the PNG format')
+    parser = argparse.ArgumentParser(description='Converts any image file from the PCF format to the PNG format')
     parser.add_argument("filename")
 
     args = parser.parse_args()
