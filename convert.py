@@ -28,22 +28,17 @@ options:
   -d, --dev       Disable LZMA compression (makes the file human-readable)
 """
 from multiprocessing import Pool, cpu_count
+from os import getpid
+
 from PIL import Image
 import lzma
 from statistics import mode
 import argparse
 from sys import getsizeof
 from collections import defaultdict
-from numba import jit
-from concurrent.futures import ProcessPoolExecutor
 
 
 Image.MAX_IMAGE_PIXELS = None
-
-
-# import line_profiler
-import os
-# os.environ["LINE_PROFILE"] = "1"
 
 
 def compress(data):
@@ -211,7 +206,7 @@ def load_height_pixels(filename, width, height, verbose):
             px = img.getpixel((x, y))
             pixels.append((shorthand_hex_color('#%02x%02x%02x%02x' % px), x, y))
     if verbose:
-        print("PROCESS N."+str(os.getpid())+" INDEXED CHUNK...")
+        print("PROCESS N."+str(getpid())+" INDEXED CHUNK...")
 
     return pixels
 

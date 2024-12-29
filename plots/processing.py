@@ -1,3 +1,4 @@
+import os
 from os import listdir, path
 import convert
 
@@ -16,7 +17,7 @@ except:
 tot_sum = 0
 for index, x in enumerate(files):
     originals.append(path.getsize(folder + x))
-    convert.convert(folder + x, True, "output.pcf")
+    os.system("python ../convert.py "+folder+x+" -v")
     transformed.append(path.getsize("output.pcf"))
     tot_sum += int(path.getsize("output.pcf") * 100 / path.getsize(folder + x))
     print(index+1, "/", len(files))
