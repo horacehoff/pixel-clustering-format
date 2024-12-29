@@ -1,6 +1,6 @@
-# Pixel-Clustering Image Format (.LPI)
+# Pixel-Clustering Image Format (.PCF)
 ### About
-LPI is an image format that works by grouping pixels together in clusters that rely on simple additions and multiplications for compression, and grouping them by color.
+PCF is an image format that works by grouping pixels together in clusters that rely on simple additions and multiplications for compression, and grouping them by color.
 
 ### How
 It uses "layers" to store pixels, that is it completely disregards the pixels of the dominant color in the image, using it as a "background". Then, it fills in the image using the other colors, thus allowing for a very efficient lossless compression. 
@@ -24,17 +24,17 @@ That's better!
 The answer lies in sums. Instead of writing all those big numbers, we can write, "0+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1......", each addition representing a number. Of course, this works even if the numbers are not evenly spaced apart (e.g. you could have "0+1+10+2+4+5+1+99").
 4. However, that's not super compact. Why write the same addition 9999 times in a row ? This is the last step. LPI simply writes "0+1\*9999". This also works with different numbers, like: "0+1\*932+2\*34+1+7+4+56+3\*23"
 
-This works great, but less so for images which contain thousands and thousands of colors and not many pixels per color, as LPI's method is given less "space" to work properly.
+This works great, but less so for images which contain thousands and thousands of colors and not many pixels per color, as PCF's method is given less "space" to work properly.
 
 ### More info
-On images where it works best, LPI offers a great compression level, sometimes being as much as 99% smaller than the original PNG image. However, it poorly compresses colors and their relation with pixels and as such, LPI works best with images that don't have a ton of colors and/or that have a high pixel/color ratio. Examples below (the images in the .LPI format are 47% to 62% smaller than their heavily optimized PNG original counterparts).
+On images where it works best, PCF offers a great compression level, sometimes being as much as 99% smaller than the original PNG image. However, it poorly compresses colors and their relation with pixels and as such, works best with images that don't have a ton of colors and/or that have a high pixel/color ratio. Examples below (the images in the .PCF format are 47% to 62% smaller than their heavily optimized PNG original counterparts).
 
-LPI supports transparency, and first reads colors in the RGBA format and then stores them in the hexadecimal format.
+PCF supports transparency, and first reads colors in the RGBA format and then stores them in the hexadecimal format.
 
 ## Installation
 
 ```bash
-git clone https://github.com/just-a-mango/lpi
+git clone https://github.com/just-a-mango//pixel-clustering-image-format
 ```
 
 ## Usage
@@ -48,7 +48,7 @@ positional arguments:
   filename
 
 options:
-  -o, --output    The .lpi output file
+  -o, --output    The .pcf output file
   -v, --verbose
   -d, --dev       Disable LZMA compression (makes the file readable)
 ```
@@ -77,14 +77,14 @@ options:
 #### PNG:
 ![Blue ball pixel art](test-images/blue_ball_pixel_art.png)
 70 kB
-#### LPI:
+#### PCF:
 804 bytes (~86 times smaller)
 
 ### Google logo
 #### PNG:
 ![Google logo](test-images/google_logo.png)
 222 kB
-### LPI:
+### PCF:
 173 kB (22% smaller)
 
 
