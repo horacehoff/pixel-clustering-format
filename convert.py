@@ -253,25 +253,34 @@ def convert(filename, verbose, output, dev=None):
     i = 0
     for color in colors:
         i += 1
+        # Get a list of tuples (x,y) containing every pixel of the color
         color_pixels = grouped_pixels[color]
 
         x_coords = {}
         y_coords = {}
 
         for pixel in color_pixels:
+            # Groups pixels by their abscissa in the dict x_coords
             if pixel[0] not in x_coords.keys():
                 x_coords[pixel[0]] = []
             x_coords[pixel[0]].append(pixel[1])
+
+            # Groups pixels by their ordinate in the dict y_coords
             if "y" + str(pixel[1]) not in y_coords.keys():
                 y_coords["y" + str(pixel[1])] = []
             y_coords["y" + str(pixel[1])].append(pixel[0])
 
+        # If grouping pixels by their ordinate is more space efficient, then replace x_coords by y_coords
         if len(str(y_coords).replace(" ", "")) < len(str(x_coords).replace(" ", "")):
             x_coords = y_coords
 
+        # If grouping pixels by their abscissa/ordinate is more space efficient, then proceed.
         if len(str(x_coords).replace(" ", "")) < len(str(color_pixels).replace(" ", "")):
+            # Transform a sequence of integers (list of abscissas/ordinates, like [1,7,5,6,9,7]) into a string containing a mathematical operation (e.g 1+5+1+4+7+85+3+3)
             for coord in x_coords:
+                # Get the list of integers in the sequence
                 coord_pixels = x_coords[coord]
+                # Get the first integer as a reference point
                 add_sequence = str(coord_pixels[0])
                 sequence_parts = [add_sequence]
                 current_sum = coord_pixels[0]
@@ -285,6 +294,7 @@ def convert(filename, verbose, output, dev=None):
                     x_coords[coord] = process_sequence(add_sequence).lstrip("+")
 
             pixels_out = str(group_by_key(x_coords)).replace(" ", "")
+        # Else, store the pixels plainly
         else:
             if len(color_pixels) == 1:
                 color_pixels = str(color_pixels[0]).replace("(", "").replace(")", "")
