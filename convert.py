@@ -282,14 +282,18 @@ def convert(filename, verbose, output, dev=None):
                 coord_pixels = x_coords[coord]
                 # Get the first integer as a reference point
                 add_sequence = str(coord_pixels[0])
+                # List which contains the differences between the different integers (e.g ["+7", "+1", "+256"]) --> The first '+' is removed later one, as it's a reference point
                 sequence_parts = [add_sequence]
                 current_sum = coord_pixels[0]
+                # Compute the difference between each integer
                 for index, pixel in enumerate(coord_pixels):
                     if index != 0:
                         diff = pixel - current_sum
                         current_sum += diff
                         sequence_parts.append(f"+{diff}")
+                # Transform the previous list into a string which thus looks like "1+5+1+4+7+85+3+3"
                 add_sequence = ''.join(sequence_parts)
+                # If storing the sequence as a mathematical operation is more space efficient, then optimize it using the process_sequence() function and store it that way
                 if len(add_sequence) < len(str(coord_pixels)):
                     x_coords[coord] = process_sequence(add_sequence).lstrip("+")
 
