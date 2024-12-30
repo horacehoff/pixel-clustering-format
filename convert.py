@@ -48,6 +48,8 @@ def compress(data):
         return lzma.compress(data, check=lzma.CHECK_CRC64, preset=9)
 
 
+# Optimize the string representation of a mathematical operation
+# IN: "0+1+1+1+1+1+1+1+2+3+5+4+7+8+8+8+8+8+8+8+8+8+8" --> OUT: "0+1*7+2+3+5+4+7+8*10"
 def process_sequence(sequence):
     nums = sequence.split("+")
     try:
