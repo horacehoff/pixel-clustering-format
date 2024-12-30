@@ -51,14 +51,19 @@ def compress(data):
 # Optimize the string representation of a mathematical operation
 # IN: "0+1+1+1+1+1+1+1+2+3+5+4+7+8+8+8+8+8+8+8+8+8+8" --> OUT: "0+1*7+2+3+5+4+7+8*10"
 def process_sequence(sequence):
+    # Split the sequence in a list containing all the integers as strings
     nums = sequence.split("+")
+    # Remove any empty string
     try:
         nums.remove("")
     except:
         pass
+    # Append an empty string at the end of list, to trigger the compression logic for the last elements
     nums.append("")
     new_sequence = ""
+    # Tracks the current number
     current_num = ""
+    # Count how many times 'current_num' occurs successively
     current_num_count = 0
     for index, num in enumerate(nums):
         if index == 0:
