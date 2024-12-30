@@ -242,6 +242,7 @@ def convert(filename, verbose, output, dev=None):
     if verbose:
         print("INDEXING COLORS...")
 
+    # Group pixels by colors, then remove the dominant color
     px_colors = list(px[0] for px in pixels)
     colors = list(dict.fromkeys(px_colors))
     bg = mode(px_colors)
