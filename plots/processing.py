@@ -1,6 +1,5 @@
 import os
 from os import listdir, path
-import convert
 
 originals = []
 transformed = []

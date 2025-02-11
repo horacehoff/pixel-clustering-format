@@ -222,7 +222,7 @@ def load_height_pixels(filename, width, height, verbose):
 def convert(filename, verbose, output, dev=None):
     if verbose:
         print("OPENING IMAGE AND CONVERTING TO RGBA...")
-    img = Image.open(filename).convert("RGBA")
+    img = Image.open(filename).convert("L")
     width = img.size[0]
     height = img.size[1]
 
@@ -244,6 +244,11 @@ def convert(filename, verbose, output, dev=None):
 
     # Group pixels by colors, then remove the dominant color
     px_colors = list(px[0] for px in pixels)
+    # REDUCE COLORS SOMEHOW
+
+
+
+
     colors = list(dict.fromkeys(px_colors))
     bg = mode(px_colors)
     colors.remove(bg)
@@ -253,6 +258,8 @@ def convert(filename, verbose, output, dev=None):
     grouped_pixels = defaultdict(list)
     for px in pixels:
         grouped_pixels[px[0]].append((px[1], px[2]))
+
+
 
     if verbose:
         print("COMPRESSING DATA...")

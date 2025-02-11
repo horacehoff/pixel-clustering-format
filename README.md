@@ -15,7 +15,7 @@ It uses "layers" to store pixels, that is it completely disregards the pixels of
 (4,0), (4,1), (4,2), (4,3), (4,4)]
 `\
 In that case, our previous method gives us this:\
-`0:[0,1,2,3,4], 1:[0,1,2,3,4], 2:[0,1,2,3,4], 3:[0,1,2,3,4], 4:[0,1,2,3,4]`\
+`0:[0,1,2,3,4], 1:[0,1,2,3,4], 2:[0,1,2,3,4], 3:[0,1,2[README.md](README.md),3,4], 4:[0,1,2,3,4]`\
 Which isn't great space-wise. However, there's a way to make it more compact. We have the same list five times in row, thus we basically re-use the previous method, which returns this:
 `[0,1,2,3,4]:[0,1,2,3,4]`\
 That's better!
