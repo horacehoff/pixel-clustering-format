@@ -1,7 +1,9 @@
+mod decode;
+
 use std::fs::File;
 use std::io::Write;
 use ahash::HashMap;
-use image::{open, Pixel, Rgba, RgbaImage};
+use image::{open, Pixel};
 use hex_color::HexColor;
 
 #[derive(Debug)]
@@ -35,8 +37,15 @@ fn optimize_math_str(input: String) -> String {
             }
         }
     }
-    new_sequence = new_sequence.strip_prefix("+").unwrap().to_string();
-    new_sequence
+    new_sequence.strip_prefix("+").unwrap().to_string()
+}
+
+fn group_by_key(input: HashMap<String, String>) -> HashMap<String,String> {
+    let mut output:HashMap<String,String> = Default::default();
+    for key in input.keys() {
+        // TODO
+    }
+    output
 }
 
 fn main() {
@@ -92,50 +101,50 @@ fn main() {
     let mut outputf: String = format!("{WIDTH}x{HEIGHT}%{BG_COLOR}%");
 
     for (color, pixels) in px_colors {
-            let mut grouped_coords:HashMap<String, Vec<u32>> = Default::default();
-            let mut y_coords:HashMap<String, Vec<u32>> = Default::default();
-            for pixel in &pixels {
-                // group by abscissa
-                if !grouped_coords.contains_key(&format!("{}", pixel.0)) {
-                    grouped_coords.insert(format!("{}", pixel.0), vec![pixel.1]);
-                } else {
-                    grouped_coords.get_mut(&format!("{}", pixel.0)).unwrap().push(pixel.1);
-                }
-                // group by ordinate (add "y" to be able to differentiate it)
-                if !y_coords.contains_key(&format!("y{}", pixel.1)) {
-                    y_coords.insert(format!("y{}", pixel.1), vec![pixel.0]);
-                } else {
-                    y_coords.get_mut(&format!("y{}", pixel.1)).unwrap().push(pixel.0);
-                }
-            }
-            if format!("{grouped_coords:?}").len() > format!("{y_coords:?}").len() {
-                grouped_coords = y_coords;
-            }
-
-            let mut export_hash:HashMap<String,String> = Default::default();
-
-            for (name, coord_pixels) in grouped_coords {
-                let mut math_sequence:String = format!("{}", coord_pixels[0]);
-                let mut value = coord_pixels[0];
-                for pixel in coord_pixels.iter().skip(1) {
-                    let diff = pixel - value;
-                    value += diff;
-                    math_sequence.push_str(&format!("+{diff}"))
-                }
-                export_hash.insert(name, optimize_math_str(math_sequence.to_string()));
-            }
-
-            if format!("{export_hash:?}").len() > format!("{pixels:?}").len() {
-                outputf.push_str(&format!("{color}{pixels:?}").replace(" ",""));
+        let mut grouped_coords:HashMap<String, Vec<u32>> = Default::default();
+        let mut y_coords:HashMap<String, Vec<u32>> = Default::default();
+        for pixel in &pixels {
+            // group by abscissa
+            if !grouped_coords.contains_key(&format!("{}", pixel.0)) {
+                grouped_coords.insert(format!("{}", pixel.0), vec![pixel.1]);
             } else {
-                let mut sequenced = format!("{color}{export_hash:?}").replace(" ", "");
-                if sequenced.contains("y") {
-                    sequenced = sequenced.replace("y", "");
-                    sequenced.push('y');
-                }
-                sequenced = sequenced.replace("\"", "");
-                outputf.push_str(&sequenced);
+                grouped_coords.get_mut(&format!("{}", pixel.0)).unwrap().push(pixel.1);
             }
+            // group by ordinate (add "y" to be able to differentiate it)
+            if !y_coords.contains_key(&format!("y{}", pixel.1)) {
+                y_coords.insert(format!("y{}", pixel.1), vec![pixel.0]);
+            } else {
+                y_coords.get_mut(&format!("y{}", pixel.1)).unwrap().push(pixel.0);
+            }
+        }
+        if format!("{grouped_coords:?}").len() > format!("{y_coords:?}").len() {
+            grouped_coords = y_coords;
+        }
+
+        let mut export_hash:HashMap<String,String> = Default::default();
+
+        for (name, coord_pixels) in grouped_coords {
+            let mut math_sequence:String = format!("{}", coord_pixels[0]);
+            let mut value = coord_pixels[0];
+            for pixel in coord_pixels.iter().skip(1) {
+                let diff = pixel - value;
+                value += diff;
+                math_sequence.push_str(&format!("+{diff}"))
+            }
+            export_hash.insert(name, optimize_math_str(math_sequence.to_string()));
+        }
+
+        if format!("{export_hash:?}").len() > format!("{pixels:?}").len() {
+            outputf.push_str(&format!("{color}{pixels:?}").replace(" ",""));
+        } else {
+            let mut sequenced = format!("{color}{export_hash:?}").replace(" ", "");
+            if sequenced.contains("y") {
+                sequenced = sequenced.replace("y", "");
+                sequenced.push('y');
+            }
+            sequenced = sequenced.replace("\"", "");
+            outputf.push_str(&sequenced);
+        }
     }
     let mut file = File::create("output.txt").unwrap();
     let mut compressed = lzma::compress(outputf.as_bytes(), 9).unwrap();
