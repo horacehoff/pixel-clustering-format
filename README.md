@@ -40,9 +40,9 @@ git clone https://github.com/just-a-mango//pixel-clustering-image-format
 ## Usage
 
 ```sh
-python convert.py [filename] [-o] [-v] [-d]
+python-legacy convert.py [filename] [-o] [-v] [-d]
 
-python back_convert.py [filename]
+python-legacy back_convert.py [filename]
 
 positional arguments:
   filename
