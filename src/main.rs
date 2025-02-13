@@ -40,12 +40,51 @@ fn optimize_math_str(input: String) -> String {
     new_sequence.strip_prefix("+").unwrap().to_string()
 }
 
-fn group_by_key(input: HashMap<String, String>) -> HashMap<String,String> {
-    let mut output:HashMap<String,String> = Default::default();
-    for key in input.keys() {
-        // TODO
+fn vec_to_math(input: HashMap<String,Vec<u32>>) -> HashMap<String,String> {
+    let mut export_hash:HashMap<String,String> = Default::default();
+
+    for (name, coord_pixels) in input {
+        let mut math_sequence:String = format!("{}", coord_pixels[0]);
+        let mut value = coord_pixels[0];
+        for pixel in coord_pixels.iter().skip(1) {
+            let diff = pixel - value;
+            value += diff;
+            math_sequence.push_str(&format!("+{diff}"))
+        }
+        export_hash.insert(name, optimize_math_str(math_sequence.to_string()));
     }
-    output
+    export_hash
+}
+
+
+fn group_by_key(input: HashMap<String, String>) -> String {
+    let mut new:HashMap<String, Vec<u32>> = Default::default();
+    let mut is_y = false;
+    for x in input.keys() {
+        if !new.contains_key(&input[x]) {
+            if x.contains("y") {
+                is_y = true;
+                new.insert(input[x].clone(), vec![x.clone().replace("y","").parse().unwrap()]);
+            } else {
+                new.insert(input[x].clone(), vec![x.clone().parse().unwrap()]);
+            }
+        } else {
+            if x.contains("y") {
+                is_y = true;
+                new.get_mut(&input[x]).unwrap().push(x.replace("y","").parse().unwrap());
+            } else {
+                new.get_mut(&input[x]).unwrap().push(x.parse().unwrap());
+            }
+        }
+    }
+    for x in new.values_mut() {
+        x.sort();
+    }
+    if is_y {
+        format!("{:?}y", vec_to_math(new))
+    } else {
+        format!("{:?}", vec_to_math(new))
+    }
 }
 
 fn main() {
@@ -121,28 +160,18 @@ fn main() {
             grouped_coords = y_coords;
         }
 
-        let mut export_hash:HashMap<String,String> = Default::default();
+        let export_hash:HashMap<String,String> = vec_to_math(grouped_coords);
+        let output = group_by_key(export_hash);
+        let mut sequenced = format!("{color}{output:?}").replace(" ", "");
 
-        for (name, coord_pixels) in grouped_coords {
-            let mut math_sequence:String = format!("{}", coord_pixels[0]);
-            let mut value = coord_pixels[0];
-            for pixel in coord_pixels.iter().skip(1) {
-                let diff = pixel - value;
-                value += diff;
-                math_sequence.push_str(&format!("+{diff}"))
-            }
-            export_hash.insert(name, optimize_math_str(math_sequence.to_string()));
-        }
-
-        if format!("{export_hash:?}").len() > format!("{pixels:?}").len() {
+        if format!("{output:?}").len() > format!("{pixels:?}").len() {
             outputf.push_str(&format!("{color}{pixels:?}").replace(" ",""));
         } else {
-            let mut sequenced = format!("{color}{export_hash:?}").replace(" ", "");
-            if sequenced.contains("y") {
+            if sequenced.ends_with("y") {
                 sequenced = sequenced.replace("y", "");
                 sequenced.push('y');
             }
-            sequenced = sequenced.replace("\"", "");
+            sequenced = sequenced.replace("\"", "").replace("\\","");
             outputf.push_str(&sequenced);
         }
     }
