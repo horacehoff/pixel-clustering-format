@@ -67,8 +67,6 @@ fn main() {
             x += 1;
         }
     }
-    println!("first {:?}", temp_pixels.first());
-
 
 
     // put the pixels in a hashmap
@@ -91,7 +89,7 @@ fn main() {
     }
     px_colors.remove(&BG_COLOR);
 
-    let mut outputf: String = format!("{WIDTH}x{HEIGHT}%");
+    let mut outputf: String = format!("{WIDTH}x{HEIGHT}%{BG_COLOR}%");
 
     for (color, pixels) in px_colors {
             let mut grouped_coords:HashMap<String, Vec<u32>> = Default::default();
@@ -103,19 +101,16 @@ fn main() {
                 } else {
                     grouped_coords.get_mut(&format!("{}", pixel.0)).unwrap().push(pixel.1);
                 }
-
                 // group by ordinate (add "y" to be able to differentiate it)
                 if !y_coords.contains_key(&format!("y{}", pixel.1)) {
                     y_coords.insert(format!("y{}", pixel.1), vec![pixel.0]);
                 } else {
                     y_coords.get_mut(&format!("y{}", pixel.1)).unwrap().push(pixel.0);
                 }
-
             }
             if format!("{grouped_coords:?}").len() > format!("{y_coords:?}").len() {
                 grouped_coords = y_coords;
             }
-
 
             let mut export_hash:HashMap<String,String> = Default::default();
 
@@ -130,7 +125,6 @@ fn main() {
                 export_hash.insert(name, optimize_math_str(math_sequence.to_string()));
             }
 
-
             if format!("{export_hash:?}").len() > format!("{pixels:?}").len() {
                 outputf.push_str(&format!("{color}{pixels:?}").replace(" ",""));
             } else {
@@ -139,15 +133,9 @@ fn main() {
                     sequenced = sequenced.replace("y", "");
                     sequenced.push('y');
                 }
-                sequenced = sequenced.replace("\"", "").replace(" ", "");
+                sequenced = sequenced.replace("\"", "");
                 outputf.push_str(&sequenced);
             }
-        
-            
-
-            
-
-        
     }
     let mut file = File::create("output.txt").unwrap();
     let mut compressed = lzma::compress(outputf.as_bytes(), 9).unwrap();
