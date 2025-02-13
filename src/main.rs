@@ -139,6 +139,17 @@ fn main() {
 
     let mut outputf: String = format!("{WIDTH}x{HEIGHT}%{BG_COLOR}%");
 
+
+
+    // MORE COMPACT COLORS
+
+
+
+
+
+
+
+
     for (color, pixels) in px_colors {
         let mut grouped_coords:HashMap<String, Vec<u32>> = Default::default();
         let mut y_coords:HashMap<String, Vec<u32>> = Default::default();
