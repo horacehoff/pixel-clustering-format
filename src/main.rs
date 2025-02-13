@@ -5,6 +5,7 @@ use std::io::Write;
 use ahash::HashMap;
 use image::{open, Pixel};
 use hex_color::HexColor;
+use serde::{Deserialize, Serialize};
 
 #[derive(Debug)]
 pub struct RPixel {
@@ -57,7 +58,7 @@ fn vec_to_math(input: HashMap<String,Vec<u32>>) -> HashMap<String,String> {
 }
 
 
-fn group_by_key(input: HashMap<String, String>) -> String {
+fn group_by_key(input: HashMap<String, String>) -> (HashMap<String,String>,bool) {
     let mut new:HashMap<String, Vec<u32>> = Default::default();
     let mut is_y = false;
     for x in input.keys() {
@@ -80,17 +81,23 @@ fn group_by_key(input: HashMap<String, String>) -> String {
     for x in new.values_mut() {
         x.sort();
     }
-    if is_y {
-        format!("{:?}y", vec_to_math(new))
-    } else {
-        format!("{:?}", vec_to_math(new))
-    }
+    (vec_to_math(new), is_y)
+}
+
+#[derive(Serialize, Deserialize, Debug)]
+// #[repr(packed)]
+pub struct Image {
+    size: (u32, u32),
+    main_color: String,
+    colors: Vec<(String, HashMap<String,String>,bool)>
 }
 
 fn main() {
+    let mut OUTPUT:Image = Image {size: (0, 0), main_color: String::new(), colors:Vec::new()};
     let image = open("cat_pixel_art.png").unwrap().into_rgba8();
     let WIDTH:u32 = image.width();
     let HEIGHT:u32 = image.height();
+    OUTPUT.size = (WIDTH, HEIGHT);
     let mut x = 0;
     let mut y = 0;
     let mut temp_pixels: Vec<RPixel> = Vec::with_capacity((WIDTH * HEIGHT) as usize);
@@ -136,6 +143,7 @@ fn main() {
         }
     }
     px_colors.remove(&BG_COLOR);
+    OUTPUT.main_color = BG_COLOR.to_string();
 
     let mut outputf: String = format!("{WIDTH}x{HEIGHT}%{BG_COLOR}%");
 
@@ -173,19 +181,21 @@ fn main() {
 
         let export_hash:HashMap<String,String> = vec_to_math(grouped_coords);
         let output = group_by_key(export_hash);
-        let mut sequenced = format!("{color}{output:?}").replace(" ", "");
-
-        if format!("{output:?}").len() > format!("{pixels:?}").len() {
-            outputf.push_str(&format!("{color}{pixels:?}").replace(" ",""));
-        } else {
-            if sequenced.ends_with("y") {
-                sequenced = sequenced.replace("y", "");
-                sequenced.push('y');
-            }
-            sequenced = sequenced.replace("\"", "").replace("\\","");
-            outputf.push_str(&sequenced);
-        }
+        OUTPUT.colors.push((color, output.0, output.1));
+        // let mut sequenced = format!("{color}{output:?}").replace(" ", "");
+        //
+        // if format!("{output:?}").len() > format!("{pixels:?}").len() {
+        //     outputf.push_str(&format!("{color}{pixels:?}").replace(" ",""));
+        // } else {
+        //     if sequenced.ends_with("y") {
+        //         sequenced = sequenced.replace("y", "");
+        //         sequenced.push('y');
+        //     }
+        //     sequenced = sequenced.replace("\"", "").replace("\\","");
+        //     outputf.push_str(&sequenced);
+        // }
     }
+    println!("OUT {OUTPUT:?}");
     let mut file = File::create("output.txt").unwrap();
     let mut compressed = lzma::compress(outputf.as_bytes(), 9).unwrap();
     file.write_all(outputf.as_bytes()).unwrap();
