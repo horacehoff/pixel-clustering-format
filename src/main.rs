@@ -1,8 +1,10 @@
+use rayon::iter::ParallelIterator;
 mod decode;
 
 use ahash::HashMap;
 use hex_color::HexColor;
 use image::{open, Pixel};
+use rayon::iter::IntoParallelIterator;
 use serde::{Deserialize, Serialize};
 use std::fs::File;
 use std::io::Write;
@@ -186,7 +188,7 @@ fn compress(path: String) -> String {
 
 
 fn find_pattern(target: String, step: usize) -> (String, usize) {
-    let mut patterns: Vec<String> = Vec::with_capacity(50);
+    let mut patterns: Vec<String> = Vec::with_capacity(target.len());
     let mut i = 0;
     let mut seen = std::collections::HashSet::new();
     while i + step <= target.len() {
@@ -207,26 +209,29 @@ fn find_pattern(target: String, step: usize) -> (String, usize) {
 fn main() {
     let mut compressed = compress("fig1.png".to_string());
 
-    let mut worthy_patterns: Vec<(String, isize)> = Vec::new();
-    for step in 2..5 {
+
+    let mut worthy_patterns: Vec<(String, isize)> = (2..5).into_par_iter().map(|step| {
         let (pattern, count) = find_pattern(compressed.to_string(), step);
-        if count == 1 { continue }
-        let savings: isize = (count as isize) * ((pattern.len() as isize) - 1) - (count as isize) - 1;
-        worthy_patterns.push((pattern, savings));
-        println!("STEP {step} COMPLETE")
-    }
+        if count != 1 {
+            let savings: isize = (count as isize) * (pattern.len() as isize - 2) - 1;
+            (pattern, savings)
+        } else {
+            (String::from(""), -99999)
+        }
+    }).collect();
+
     worthy_patterns.sort_by(|a, b| b.1.cmp(&a.1));
 
     println!("PATTERNS ARE {worthy_patterns:?}");
     let mut use_letter = 0;
-    let mut char_list: Vec<char> = vec![
+    static CHARS: [char; 26] = [
         'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j',
         'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't',
         'u', 'v', 'w', 'x', 'y', 'z'
     ];
-    for (pattern, count) in &worthy_patterns[0..1] {
+    for (pattern, _) in &worthy_patterns[0..1] {
         if compressed.matches(pattern).count() > 1 {
-            let letter = char_list[use_letter];
+            let letter = CHARS[use_letter];
             compressed = compressed.replace(pattern, &letter.to_string());
             if use_letter == 0 {
                 compressed.push_str("%");
