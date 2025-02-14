@@ -10,6 +10,7 @@ image = "0.25.5"
 # postcard = "1.1.1"
 # rust-lzma = "0.6.0"
 serde = { version = "1.0.217", features = ["derive"] }
+worldgen = "0.5.3"
 
 [profile.release]
 opt-level = 3
@@ -19,7 +20,6 @@ panic = 'abort'
 debug = false
 rpath = false
 strip = true
-debug-assertions = false
 
 [profile.release.package."*"]
 opt-level = 3

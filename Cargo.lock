@@ -549,6 +549,7 @@ dependencies = [
  "hex_color",
  "image",
  "serde",
+ "worldgen",
 ]
 
 [[package]]
@@ -1001,6 +1002,12 @@ checksum = "59690dea168f2198d1a3b0cac23b8063efcd11012f10ae4698f284808c8ef603"
 dependencies = [
  "memchr",
 ]
+
+[[package]]
+name = "worldgen"
+version = "0.5.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "a9b77fba24c873b60af296c1f0c5639114186d1ac3c99f880a7bb590bdc04065"
 
 [[package]]
 name = "zerocopy"

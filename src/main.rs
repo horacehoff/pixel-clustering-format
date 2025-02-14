@@ -1,11 +1,12 @@
 mod decode;
 
+use ahash::HashMap;
+use hex_color::HexColor;
+use image::{open, Pixel};
+use serde::{Deserialize, Serialize};
 use std::fs::File;
 use std::io::Write;
-use ahash::HashMap;
-use image::{open, Pixel};
-use hex_color::HexColor;
-use serde::{Deserialize, Serialize};
+use worldgen::noisemap::{NoiseMapGenerator, NoiseMapGeneratorBase};
 
 #[derive(Debug)]
 pub struct RPixel {
@@ -92,15 +93,13 @@ pub struct Image {
     colors: Vec<(String, HashMap<String,String>,bool)>
 }
 
-fn main() {
-    let mut OUTPUT:Image = Image {size: (0, 0), main_color: String::new(), colors:Vec::new()};
-    let image = open("cat_pixel_art.png").unwrap().into_rgba8();
-    let WIDTH:u32 = image.width();
-    let HEIGHT:u32 = image.height();
-    //OUTPUT.size = (WIDTH, HEIGHT);
+fn compress(path: String) -> String {
+    let image = open(path).unwrap().into_rgba8();
+    let width: u32 = image.width();
+    let height: u32 = image.height();
     let mut x = 0;
     let mut y = 0;
-    let mut temp_pixels: Vec<RPixel> = Vec::with_capacity((WIDTH * HEIGHT) as usize);
+    let mut temp_pixels: Vec<RPixel> = Vec::with_capacity((width * height) as usize);
     for w in image.pixels() {
         let colors = w.channels().to_vec();
         let mut color = HexColor::rgba(colors[0], colors[1], colors[2], colors[3]).display_rgba().to_string();
@@ -113,9 +112,9 @@ fn main() {
         if color.ends_with("FF") {
             color = color.strip_suffix("FF").unwrap().to_string();
         }
-        temp_pixels.push(RPixel {x, y, color });
+        temp_pixels.push(RPixel { x, y, color });
         // if at EOL, go to start of next line
-        if x == WIDTH - 1 {
+        if x == width - 1 {
             x = 0;
             y += 1;
         } else {
@@ -134,33 +133,21 @@ fn main() {
         }
     }
     // remove dominant color
-    let mut BG_COLOR: String = String::new();
-    let mut count:usize = 0;
+    let mut bg_color: String = String::new();
+    let mut count: usize = 0;
     for x in px_colors.keys() {
         if px_colors[x].len() > count {
             count = px_colors[x].len();
-            BG_COLOR = x.to_string();
+            bg_color = x.to_string();
         }
     }
-    px_colors.remove(&BG_COLOR);
-    //OUTPUT.main_color = BG_COLOR.to_string();
+    px_colors.remove(&bg_color);
 
-    let mut outputf: String = format!("{WIDTH}%{HEIGHT}%{BG_COLOR}%");
-
-
-
-    // MORE COMPACT COLORS
-
-
-
-
-
-
-
+    let mut outputf: String = format!("{width}%{height}%{bg_color}%");
 
     for (color, pixels) in px_colors {
-        let mut grouped_coords:HashMap<String, Vec<u32>> = Default::default();
-        let mut y_coords:HashMap<String, Vec<u32>> = Default::default();
+        let mut grouped_coords: HashMap<String, Vec<u32>> = Default::default();
+        let mut y_coords: HashMap<String, Vec<u32>> = Default::default();
         for pixel in &pixels {
             // group by abscissa
             if !grouped_coords.contains_key(&format!("{}", pixel.0)) {
@@ -179,25 +166,79 @@ fn main() {
             grouped_coords = y_coords;
         }
 
-        let export_hash:HashMap<String,String> = vec_to_math(grouped_coords);
+        let export_hash: HashMap<String, String> = vec_to_math(grouped_coords);
         let (output, is_y) = group_by_key(export_hash);
-        //OUTPUT.colors.push((color, output.0, output.1));
         let mut sequenced = format!("{color}{output:?}").replace(" ", "");
 
         if format!("{output:?}").len() > format!("{pixels:?}").len() {
-            outputf.push_str(&format!("{color}{pixels:?}").replace(" ",""));
+            outputf.push_str(&format!("{color}{pixels:?}").replace(" ", ""));
         } else {
             if is_y {
                 sequenced = sequenced.replace("y", "");
                 sequenced.push('y');
             }
-            sequenced = sequenced.replace("\"", "").replace("\\","");
+            sequenced = sequenced.replace("\"", "").replace("\\", "");
             outputf.push_str(&sequenced);
         }
     }
-    println!("OUT {OUTPUT:?}");
+    outputf
+}
+
+
+fn find_pattern(target: String, step: usize) -> (String, usize) {
+    let mut patterns: Vec<String> = Vec::with_capacity(50);
+    let mut i = 0;
+    let mut seen = std::collections::HashSet::new();
+    while i + step <= target.len() {
+        let slice = &target[i..i + step];
+        if seen.insert(slice) {
+            patterns.push(slice.to_string());
+        }
+        i += 1;
+    }
+    // return => (pattern, max_pattern_count)
+    patterns
+        .iter()
+        .map(|x| (x.to_string(), target.matches(x).count()))
+        .max_by_key(|&(_, count)| count)
+        .unwrap()
+}
+
+fn main() {
+    let mut compressed = compress("fig1.png".to_string());
+
+    let mut worthy_patterns: Vec<(String, isize)> = Vec::new();
+    for step in 2..5 {
+        let (pattern, count) = find_pattern(compressed.to_string(), step);
+        if count == 1 { continue }
+        let savings: isize = (count as isize) * ((pattern.len() as isize) - 1) - (count as isize) - 1;
+        worthy_patterns.push((pattern, savings));
+        println!("STEP {step} COMPLETE")
+    }
+    worthy_patterns.sort_by(|a, b| b.1.cmp(&a.1));
+
+    println!("PATTERNS ARE {worthy_patterns:?}");
+    let mut use_letter = 0;
+    let mut char_list: Vec<char> = vec![
+        'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j',
+        'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't',
+        'u', 'v', 'w', 'x', 'y', 'z'
+    ];
+    for (pattern, count) in &worthy_patterns[0..1] {
+        if compressed.matches(pattern).count() > 1 {
+            let letter = char_list[use_letter];
+            compressed = compressed.replace(pattern, &letter.to_string());
+            if use_letter == 0 {
+                compressed.push_str("%");
+            }
+            compressed.push_str(&format!("${pattern}${letter}"));
+            use_letter += 1;
+        }
+    }
+
+
     let mut file = File::create("output.txt").unwrap();
     //let mut compressed = lzma::compress(outputf.as_bytes(), 9).unwrap();
-    file.write_all(outputf.as_bytes()).unwrap();
-    // file.write_all(&compressed).unwrap();
+    file.write_all(compressed.as_bytes()).unwrap();
+
 }
