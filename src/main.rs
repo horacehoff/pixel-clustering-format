@@ -6,7 +6,6 @@ use ahash::HashMap;
 use hex_color::HexColor;
 use image::{open, Pixel};
 use rayon::iter::IntoParallelIterator;
-use std::io::Write;
 
 #[derive(Debug)]
 pub struct RPixel {

@@ -1,4 +1,5 @@
 use ahash::HashMap;
+use image::RgbaImage;
 use lzma_rust::{LZMA2Options, LZMA2Reader};
 use rayon::iter::{IntoParallelRefIterator, ParallelIterator};
 use std::fs::File;
@@ -22,6 +23,9 @@ pub fn decode(path: String) {
     let width: u32 = colors.remove(0).parse().unwrap();
     let height: u32 = colors.remove(0).parse().unwrap();
     let bg_color = colors.remove(0);
+    let mut output = RgbaImage::from_fn(width, height, |x, y| {
+        image::Rgba(<[u8; 4]>::from(hex_color::HexColor::parse(&bg_color).unwrap().split_rgba()))
+    });
 
 
     // if some letters need to be replaced, replace them
@@ -68,8 +72,10 @@ pub fn decode(path: String) {
         for x in parsed.entries() {
             working.insert(x.0.to_string(), x.1.as_str().unwrap().to_string());
         }
+
+
         println!("{working:?}\n\n");
     }
 
-
+    output.save("test.png").unwrap();
 }
