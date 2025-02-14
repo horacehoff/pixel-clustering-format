@@ -4,17 +4,16 @@ mod decode;
 use ahash::HashMap;
 use hex_color::HexColor;
 use image::{open, Pixel};
+use lzma_rust::{CountingWriter, LZMA2Options, LZMA2Writer};
 use rayon::iter::IntoParallelIterator;
-use serde::{Deserialize, Serialize};
 use std::fs::File;
 use std::io::Write;
-use worldgen::noisemap::{NoiseMapGenerator, NoiseMapGeneratorBase};
 
 #[derive(Debug)]
 pub struct RPixel {
     x: u32,
     y: u32,
-    color: String
+    color: String,
 }
 
 fn optimize_math_str(input: String) -> String {
@@ -27,8 +26,7 @@ fn optimize_math_str(input: String) -> String {
         if index == 0 {
             current_num = num;
             count = 1;
-        } else {
-            if current_num == *num {
+        } else if current_num == *num {
                 count += 1;
             } else {
                 if count > 1 {
@@ -39,16 +37,15 @@ fn optimize_math_str(input: String) -> String {
                 current_num = num;
                 count = 1;
             }
-        }
     }
     new_sequence.strip_prefix("+").unwrap().to_string()
 }
 
-fn vec_to_math(input: HashMap<String,Vec<u32>>) -> HashMap<String,String> {
-    let mut export_hash:HashMap<String,String> = Default::default();
+fn vec_to_math(input: HashMap<String, Vec<u32>>) -> HashMap<String, String> {
+    let mut export_hash: HashMap<String, String> = Default::default();
 
     for (name, coord_pixels) in input {
-        let mut math_sequence:String = format!("{}", coord_pixels[0]);
+        let mut math_sequence: String = format!("{}", coord_pixels[0]);
         let mut value = coord_pixels[0];
         for pixel in coord_pixels.iter().skip(1) {
             let diff = pixel - value;
@@ -60,39 +57,33 @@ fn vec_to_math(input: HashMap<String,Vec<u32>>) -> HashMap<String,String> {
     export_hash
 }
 
-
-fn group_by_key(input: HashMap<String, String>) -> (HashMap<String,String>,bool) {
-    let mut new:HashMap<String, Vec<u32>> = Default::default();
+fn group_by_key(input: HashMap<String, String>) -> (HashMap<String, String>, bool) {
+    let mut new: HashMap<String, Vec<u32>> = Default::default();
     let mut is_y = false;
     for x in input.keys() {
         if !new.contains_key(&input[x]) {
             if x.contains("y") {
                 is_y = true;
-                new.insert(input[x].clone(), vec![x.clone().replace("y","").parse().unwrap()]);
+                new.insert(
+                    input[x].clone(),
+                    vec![x.clone().replace("y", "").parse().unwrap()],
+                );
             } else {
                 new.insert(input[x].clone(), vec![x.clone().parse().unwrap()]);
             }
+        } else if x.contains("y") {
+            is_y = true;
+            new.get_mut(&input[x])
+                .unwrap()
+                .push(x.replace("y", "").parse().unwrap());
         } else {
-            if x.contains("y") {
-                is_y = true;
-                new.get_mut(&input[x]).unwrap().push(x.replace("y","").parse().unwrap());
-            } else {
-                new.get_mut(&input[x]).unwrap().push(x.parse().unwrap());
-            }
+            new.get_mut(&input[x]).unwrap().push(x.parse().unwrap());
         }
     }
     for x in new.values_mut() {
         x.sort();
     }
     (vec_to_math(new), is_y)
-}
-
-#[derive(Serialize, Deserialize, Debug)]
-// #[repr(packed)]
-pub struct Image {
-    size: (u32, u32),
-    main_color: String,
-    colors: Vec<(String, HashMap<String,String>,bool)>
 }
 
 fn compress(path: String) -> String {
@@ -104,9 +95,14 @@ fn compress(path: String) -> String {
     let mut temp_pixels: Vec<RPixel> = Vec::with_capacity((width * height) as usize);
     for w in image.pixels() {
         let colors = w.channels().to_vec();
-        let mut color = HexColor::rgba(colors[0], colors[1], colors[2], colors[3]).display_rgba().to_string();
+        let mut color = HexColor::rgba(colors[0], colors[1], colors[2], colors[3])
+            .display_rgba()
+            .to_string();
         let indexable: Vec<(usize, char)> = color.chars().enumerate().collect();
-        if indexable[0] == indexable[1] && indexable[2] == indexable[3] && indexable[4] == indexable[5] {
+        if indexable[0] == indexable[1]
+            && indexable[2] == indexable[3]
+            && indexable[4] == indexable[5]
+        {
             color.remove(1);
             color.remove(3);
             color.remove(5);
@@ -123,7 +119,6 @@ fn compress(path: String) -> String {
             x += 1;
         }
     }
-
 
     // put the pixels in a hashmap
     let mut px_colors: HashMap<String, Vec<(u32, u32)>> = Default::default();
@@ -155,13 +150,19 @@ fn compress(path: String) -> String {
             if !grouped_coords.contains_key(&format!("{}", pixel.0)) {
                 grouped_coords.insert(format!("{}", pixel.0), vec![pixel.1]);
             } else {
-                grouped_coords.get_mut(&format!("{}", pixel.0)).unwrap().push(pixel.1);
+                grouped_coords
+                    .get_mut(&format!("{}", pixel.0))
+                    .unwrap()
+                    .push(pixel.1);
             }
             // group by ordinate (add "y" to be able to differentiate it)
             if !y_coords.contains_key(&format!("y{}", pixel.1)) {
                 y_coords.insert(format!("y{}", pixel.1), vec![pixel.0]);
             } else {
-                y_coords.get_mut(&format!("y{}", pixel.1)).unwrap().push(pixel.0);
+                y_coords
+                    .get_mut(&format!("y{}", pixel.1))
+                    .unwrap()
+                    .push(pixel.0);
             }
         }
         if format!("{grouped_coords:?}").len() > format!("{y_coords:?}").len() {
@@ -186,7 +187,6 @@ fn compress(path: String) -> String {
     outputf
 }
 
-
 fn find_pattern(target: String, step: usize) -> (String, usize) {
     let mut patterns: Vec<String> = Vec::with_capacity(target.len());
     let mut i = 0;
@@ -206,26 +206,32 @@ fn find_pattern(target: String, step: usize) -> (String, usize) {
         .unwrap()
 }
 
-fn remove_dup_patterns(compressed: String, min_pattern_size: usize, max_pattern_size: usize) -> String {
-    let mut worthy_patterns: Vec<(String, isize)> = (min_pattern_size..=max_pattern_size).into_par_iter().map(|step| {
-        let (pattern, count) = find_pattern(compressed.to_string(), step);
-        println!("PROCESSED N.{step}");
-        if count != 1 {
-            let savings: isize = (count as isize) * (pattern.len() as isize - 2) - 1;
-            (pattern, savings)
-        } else {
-            (String::from(""), -99999)
-        }
-    }).collect();
+fn remove_dup_patterns(
+    compressed: String,
+    min_pattern_size: usize,
+    max_pattern_size: usize,
+) -> String {
+    let mut worthy_patterns: Vec<(String, isize)> = (min_pattern_size..=max_pattern_size)
+        .into_par_iter()
+        .map(|step| {
+            let (pattern, count) = find_pattern(compressed.to_string(), step);
+            println!("PROCESSED N.{step}");
+            if count != 1 {
+                let savings: isize = (count as isize) * (pattern.len() as isize - 2) - 1;
+                (pattern, savings)
+            } else {
+                (String::from(""), -99999)
+            }
+        })
+        .collect();
 
     worthy_patterns.sort_by(|a, b| b.1.cmp(&a.1));
 
     println!("PATTERNS ARE {worthy_patterns:?}");
     let mut use_letter = 0;
     static CHARS: [char; 26] = [
-        'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j',
-        'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't',
-        'u', 'v', 'w', 'x', 'y', 'z'
+        'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r',
+        's', 't', 'u', 'v', 'w', 'x', 'y', 'z',
     ];
     let mut output = compressed;
     for (pattern, _) in &worthy_patterns[0..1] {
@@ -233,7 +239,7 @@ fn remove_dup_patterns(compressed: String, min_pattern_size: usize, max_pattern_
             let letter = CHARS[use_letter];
             output = output.replace(pattern, &letter.to_string());
             if use_letter == 0 {
-                output.push_str("%");
+                output.push('%');
             }
             output.push_str(&format!("${pattern}${letter}"));
             use_letter += 1;
@@ -243,12 +249,24 @@ fn remove_dup_patterns(compressed: String, min_pattern_size: usize, max_pattern_
 }
 
 fn main() {
+    static COMPRESS: bool = false;
+
     let mut compressed = compress("fig1.png".to_string());
 
     compressed = remove_dup_patterns(compressed, 2, 4);
 
-    let mut file = File::create("output.txt").unwrap();
-    //let mut compressed = lzma::compress(outputf.as_bytes(), 9).unwrap();
-    file.write_all(compressed.as_bytes()).unwrap();
+
+    let mut file = File::create("output.pcf").unwrap();
+    if COMPRESS {
+        let mut out = Vec::new();
+        let options = LZMA2Options::with_preset(9);
+        {
+            let mut w = LZMA2Writer::new(CountingWriter::new(&mut out), &options);
+            w.write_all(compressed.as_bytes()).unwrap();
+        }
+        file.write_all(&out).unwrap();
+    } else {
+        file.write_all(&compressed.as_bytes()).unwrap();
+    }
 
 }
