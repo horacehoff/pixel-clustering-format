@@ -15,5 +15,20 @@ pub fn decode(path: String) {
     let mut r = LZMA2Reader::new(&contents[..], options.dict_size, None);
     r.read_to_end(&mut decompressed).unwrap();
 
-    println!("RESULT {}", String::from_utf8(decompressed).unwrap())
+    let result = String::from_utf8(decompressed).unwrap();
+    println!("{result}");
+    let mut colors: Vec<&str> = result.split('%').collect();
+    let width: u32 = colors.remove(0).parse().unwrap();
+    let height: u32 = colors.remove(0).parse().unwrap();
+
+    if colors.last().unwrap().contains("$") {
+        let replacements = colors.remove(colors.len() - 1);
+        let mut parts: Vec<&str> = replacements.split("$").collect();
+        parts.retain(|x| !x.is_empty());
+        let couples: Vec<(String, String)> = parts.iter().zip(parts.iter().skip(1)).map(|(a, b)| (b.to_string(), a.to_string())).collect();
+        for (by, to) in couples {
+            colors.iter().map(|x| x);
+        }
+        //println!("RPEL {couples:?}");
+    }
 }
