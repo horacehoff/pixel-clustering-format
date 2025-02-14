@@ -1,3 +1,4 @@
+use ahash::HashMap;
 use lzma_rust::{LZMA2Options, LZMA2Reader};
 use rayon::iter::{IntoParallelRefIterator, ParallelIterator};
 use std::fs::File;
@@ -61,7 +62,13 @@ pub fn decode(path: String) {
         }
         pixels.insert(1, '"');
         pixels.insert(pixels.len() - 1, '"');
-        println!("{pixels}\n\n");
+
+        let parsed = json::parse(&pixels).unwrap();
+        let mut working: HashMap<String, String> = Default::default();
+        for x in parsed.entries() {
+            working.insert(x.0.to_string(), x.1.as_str().unwrap().to_string());
+        }
+        println!("{working:?}\n\n");
     }
 
 
