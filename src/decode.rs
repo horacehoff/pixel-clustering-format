@@ -104,16 +104,19 @@ pub fn decode(path: String) {
             working.insert(x.0.to_string(), x.1.as_str().unwrap().to_string());
         }
 
+        let mut intermediary: HashMap<String, String> = HashMap::default();
         for x in working.keys() {
             let expanded = expand_math(x.to_string());
+            let vecs = math_to_vec(expanded);
+            let value = &working[x];
+            for y in vecs {
+                intermediary.insert(value.to_string(), y);
+            }
 
-            let expanded = math_to_vec(expanded);
-            println!("{expanded:?}");
         }
 
 
-
-        println!("{working:?}\n\n");
+        println!("{intermediary:?}\n\n");
     }
 
     output.save("test.png").unwrap();
