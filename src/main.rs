@@ -1,12 +1,11 @@
 use rayon::iter::ParallelIterator;
 mod decode;
 
+use crate::decode::decode;
 use ahash::HashMap;
 use hex_color::HexColor;
 use image::{open, Pixel};
-use lzma_rust::{CountingWriter, LZMA2Options, LZMA2Writer};
 use rayon::iter::IntoParallelIterator;
-use std::fs::File;
 use std::io::Write;
 
 #[derive(Debug)]
@@ -86,7 +85,7 @@ fn group_by_key(input: HashMap<String, String>) -> (HashMap<String, String>, boo
     (vec_to_math(new), is_y)
 }
 
-fn compress(path: String) -> String {
+fn convert(path: String) -> String {
     let image = open(path).unwrap().into_rgba8();
     let width: u32 = image.width();
     let height: u32 = image.height();
@@ -249,24 +248,27 @@ fn remove_dup_patterns(
 }
 
 fn main() {
-    static COMPRESS: bool = false;
+    // static COMPRESS: bool = true;
+    //
+    // let mut compressed = convert("cat_pixel_art.png".to_string());
+    //
+    // compressed = remove_dup_patterns(compressed, 2, 4);
+    //
+    // let mut file = File::create("output.txt").unwrap();
+    // if COMPRESS {
+    //     let mut out = Vec::new();
+    //     let mut options = LZMA2Options::with_preset(9);
+    //     options.dict_size = LZMA2Options::DICT_SIZE_DEFAULT;
+    //     {
+    //         let mut w = LZMA2Writer::new(CountingWriter::new(&mut out), &options);
+    //         w.write_all(compressed.as_bytes()).unwrap();
+    //         w.write(&[]).unwrap();
+    //     }
+    //     file.write_all(&out).unwrap();
+    // } else {
+    //     file.write_all(&compressed.as_bytes()).unwrap();
+    // }
 
-    let mut compressed = compress("fig1.png".to_string());
-
-    compressed = remove_dup_patterns(compressed, 2, 4);
-
-
-    let mut file = File::create("output.pcf").unwrap();
-    if COMPRESS {
-        let mut out = Vec::new();
-        let options = LZMA2Options::with_preset(9);
-        {
-            let mut w = LZMA2Writer::new(CountingWriter::new(&mut out), &options);
-            w.write_all(compressed.as_bytes()).unwrap();
-        }
-        file.write_all(&out).unwrap();
-    } else {
-        file.write_all(&compressed.as_bytes()).unwrap();
-    }
+    decode("output.txt".parse().unwrap());
 
 }

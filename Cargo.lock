@@ -431,7 +431,7 @@ version = "0.1.7"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "5baab2bbbd7d75a144d671e9ff79270e903957d92fb7386fd39034c709bd2661"
 dependencies = [
-    "byteorder",
+ "byteorder",
 ]
 
 [[package]]
@@ -557,7 +557,7 @@ dependencies = [
  "ahash",
  "hex_color",
  "image",
-    "lzma-rust",
+ "lzma-rust",
  "rayon",
 ]
 
