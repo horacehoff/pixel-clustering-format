@@ -5,6 +5,39 @@ use rayon::iter::{IntoParallelRefIterator, ParallelIterator};
 use std::fs::File;
 use std::io::Read;
 
+pub fn expand_math(s: String) -> String {
+    let mut current = '0';
+    let mut parts: Vec<String> = s.split('+').map(|x| x.to_string()).collect();
+    let mut output: String = String::new();
+    //println!("{parts:?}");
+    for x in parts {
+        if !x.contains("*") {
+            output.push('+');
+            output.push_str(&x);
+        } else {
+            let split: Vec<&str> = x.split('*').collect();
+            let count: u32 = split[1].parse().unwrap();
+            let number = split[0];
+            for _ in 0..count {
+                output.push('+');
+                output.push_str(number);
+            }
+        }
+    }
+    output.trim_start_matches('+').to_string()
+}
+
+pub fn math_to_vec(s: String) -> Vec<String> {
+    let splits: Vec<u32> = s.split('+').collect::<Vec<&str>>().iter().map(|x| x.parse::<u32>().unwrap()).collect();
+    let mut output: Vec<String> = Vec::with_capacity(splits.len());
+    let mut count: u32 = 0;
+    for x in splits {
+        count = count + x;
+        output.push(count.to_string())
+    }
+    output
+}
+
 pub fn decode(path: String) {
     let mut input = File::open(path).unwrap();
     let mut contents = vec![];
@@ -23,9 +56,7 @@ pub fn decode(path: String) {
     let width: u32 = colors.remove(0).parse().unwrap();
     let height: u32 = colors.remove(0).parse().unwrap();
     let bg_color = colors.remove(0);
-    let mut output = RgbaImage::from_fn(width, height, |x, y| {
-        image::Rgba(<[u8; 4]>::from(hex_color::HexColor::parse(&bg_color).unwrap().split_rgba()))
-    });
+    let mut output = RgbaImage::from_pixel(width, height, image::Rgba(<[u8; 4]>::from(hex_color::HexColor::parse(&bg_color).unwrap().split_rgba())));
 
 
     // if some letters need to be replaced, replace them
@@ -72,6 +103,14 @@ pub fn decode(path: String) {
         for x in parsed.entries() {
             working.insert(x.0.to_string(), x.1.as_str().unwrap().to_string());
         }
+
+        for x in working.keys() {
+            let expanded = expand_math(x.to_string());
+
+            let expanded = math_to_vec(expanded);
+            println!("{expanded:?}");
+        }
+
 
 
         println!("{working:?}\n\n");

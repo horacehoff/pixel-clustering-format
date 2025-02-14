@@ -227,9 +227,9 @@ fn remove_dup_patterns(
 
     println!("PATTERNS ARE {worthy_patterns:?}");
     let mut use_letter = 0;
-    static CHARS: [char; 26] = [
+    static CHARS: [char; 27] = [
         'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r',
-        's', 't', 'u', 'v', 'w', 'x', 'y', 'z',
+        's', 't', 'u', 'v', 'w', 'x', 'z', '&', '_'
     ];
     let mut output = compressed;
     for (pattern, _) in &worthy_patterns[0..1] {
