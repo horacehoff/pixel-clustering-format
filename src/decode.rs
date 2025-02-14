@@ -17,11 +17,13 @@ pub fn decode(path: String) {
     r.read_to_end(&mut decompressed).unwrap();
 
     let result = String::from_utf8(decompressed).unwrap();
-    println!("{result}");
     let mut colors: Vec<String> = result.split('%').map(|x| x.to_string()).collect();
     let width: u32 = colors.remove(0).parse().unwrap();
     let height: u32 = colors.remove(0).parse().unwrap();
+    let bg_color = colors.remove(0);
 
+
+    // if some letters need to be replaced, replace them
     if colors.last().unwrap().contains("$") {
         let replacements = colors.remove(colors.len() - 1);
         let mut parts: Vec<&str> = replacements.split("$").collect();
@@ -31,4 +33,36 @@ pub fn decode(path: String) {
             colors = colors.par_iter().map(|x| x.replace(&by, &to)).collect();
         }
     }
+
+    let mut colors: Vec<String> = colors.remove(0).split("#").map(|x| x.to_string()).collect();
+    colors.retain(|x| !x.is_empty());
+    println!("COLORS{colors:?}");
+    for x in colors.iter_mut() {
+        let mut is_y = false;
+        if x.ends_with("y") {
+            is_y = true;
+            x.pop().unwrap();
+        }
+        let split: Vec<&str> = x.split('{').into_iter().collect();
+        let color = format!("#{}", split[0]);
+        let mut pixels = format!("{{{}", split[1]);
+        // VERY BAD CODE BUT IT WORKS
+        for (loc, (i, _)) in pixels.clone().match_indices(':').enumerate() {
+            pixels.insert(loc + i, '"');
+        }
+        for (loc, (i, _)) in pixels.clone().match_indices(':').enumerate() {
+            pixels.insert(loc + i + 1, '"');
+        }
+        for (loc, (i, _)) in pixels.clone().match_indices(',').enumerate() {
+            pixels.insert(loc + i, '"');
+        }
+        for (loc, (i, _)) in pixels.clone().match_indices(',').enumerate() {
+            pixels.insert(loc + i + 1, '"');
+        }
+        pixels.insert(1, '"');
+        pixels.insert(pixels.len() - 1, '"');
+        println!("{pixels}\n\n");
+    }
+
+
 }
