@@ -1,4 +1,5 @@
 use lzma_rust::{LZMA2Options, LZMA2Reader};
+use rayon::iter::{IntoParallelRefIterator, ParallelIterator};
 use std::fs::File;
 use std::io::Read;
 
@@ -17,7 +18,7 @@ pub fn decode(path: String) {
 
     let result = String::from_utf8(decompressed).unwrap();
     println!("{result}");
-    let mut colors: Vec<&str> = result.split('%').collect();
+    let mut colors: Vec<String> = result.split('%').map(|x| x.to_string()).collect();
     let width: u32 = colors.remove(0).parse().unwrap();
     let height: u32 = colors.remove(0).parse().unwrap();
 
@@ -27,8 +28,7 @@ pub fn decode(path: String) {
         parts.retain(|x| !x.is_empty());
         let couples: Vec<(String, String)> = parts.iter().zip(parts.iter().skip(1)).map(|(a, b)| (b.to_string(), a.to_string())).collect();
         for (by, to) in couples {
-            colors.iter().map(|x| x);
+            colors = colors.par_iter().map(|x| x.replace(&by, &to)).collect();
         }
-        //println!("RPEL {couples:?}");
     }
 }
