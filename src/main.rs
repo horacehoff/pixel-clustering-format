@@ -206,12 +206,10 @@ fn find_pattern(target: String, step: usize) -> (String, usize) {
         .unwrap()
 }
 
-fn main() {
-    let mut compressed = compress("fig1.png".to_string());
-
-
-    let mut worthy_patterns: Vec<(String, isize)> = (2..5).into_par_iter().map(|step| {
+fn remove_dup_patterns(compressed: String, min_pattern_size: usize, max_pattern_size: usize) -> String {
+    let mut worthy_patterns: Vec<(String, isize)> = (min_pattern_size..=max_pattern_size).into_par_iter().map(|step| {
         let (pattern, count) = find_pattern(compressed.to_string(), step);
+        println!("PROCESSED N.{step}");
         if count != 1 {
             let savings: isize = (count as isize) * (pattern.len() as isize - 2) - 1;
             (pattern, savings)
@@ -229,18 +227,25 @@ fn main() {
         'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't',
         'u', 'v', 'w', 'x', 'y', 'z'
     ];
+    let mut output = compressed;
     for (pattern, _) in &worthy_patterns[0..1] {
-        if compressed.matches(pattern).count() > 1 {
+        if output.matches(pattern).count() > 1 {
             let letter = CHARS[use_letter];
-            compressed = compressed.replace(pattern, &letter.to_string());
+            output = output.replace(pattern, &letter.to_string());
             if use_letter == 0 {
-                compressed.push_str("%");
+                output.push_str("%");
             }
-            compressed.push_str(&format!("${pattern}${letter}"));
+            output.push_str(&format!("${pattern}${letter}"));
             use_letter += 1;
         }
     }
+    output
+}
 
+fn main() {
+    let mut compressed = compress("fig1.png".to_string());
+
+    compressed = remove_dup_patterns(compressed, 2, 4);
 
     let mut file = File::create("output.txt").unwrap();
     //let mut compressed = lzma::compress(outputf.as_bytes(), 9).unwrap();
