@@ -1,14 +1,14 @@
 [package]
 name = "pcf"
 version = "0.1.0"
-edition = "2024"
+edition = "2021"
 
 [dependencies]
 ahash = "0.8.11"
 hex_color = "3.0.0"
 image = "0.25.5"
-postcard = "1.1.1"
-rust-lzma = "0.6.0"
+# postcard = "1.1.1"
+# rust-lzma = "0.6.0"
 serde = { version = "1.0.217", features = ["derive"] }
 
 [profile.release]

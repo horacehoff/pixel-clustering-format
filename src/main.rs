@@ -97,7 +97,7 @@ fn main() {
     let image = open("cat_pixel_art.png").unwrap().into_rgba8();
     let WIDTH:u32 = image.width();
     let HEIGHT:u32 = image.height();
-    OUTPUT.size = (WIDTH, HEIGHT);
+    //OUTPUT.size = (WIDTH, HEIGHT);
     let mut x = 0;
     let mut y = 0;
     let mut temp_pixels: Vec<RPixel> = Vec::with_capacity((WIDTH * HEIGHT) as usize);
@@ -143,9 +143,9 @@ fn main() {
         }
     }
     px_colors.remove(&BG_COLOR);
-    OUTPUT.main_color = BG_COLOR.to_string();
+    //OUTPUT.main_color = BG_COLOR.to_string();
 
-    let mut outputf: String = format!("{WIDTH}x{HEIGHT}%{BG_COLOR}%");
+    let mut outputf: String = format!("{WIDTH}%{HEIGHT}%{BG_COLOR}%");
 
 
 
@@ -180,24 +180,24 @@ fn main() {
         }
 
         let export_hash:HashMap<String,String> = vec_to_math(grouped_coords);
-        let output = group_by_key(export_hash);
-        OUTPUT.colors.push((color, output.0, output.1));
-        // let mut sequenced = format!("{color}{output:?}").replace(" ", "");
-        //
-        // if format!("{output:?}").len() > format!("{pixels:?}").len() {
-        //     outputf.push_str(&format!("{color}{pixels:?}").replace(" ",""));
-        // } else {
-        //     if sequenced.ends_with("y") {
-        //         sequenced = sequenced.replace("y", "");
-        //         sequenced.push('y');
-        //     }
-        //     sequenced = sequenced.replace("\"", "").replace("\\","");
-        //     outputf.push_str(&sequenced);
-        // }
+        let (output, is_y) = group_by_key(export_hash);
+        //OUTPUT.colors.push((color, output.0, output.1));
+        let mut sequenced = format!("{color}{output:?}").replace(" ", "");
+
+        if format!("{output:?}").len() > format!("{pixels:?}").len() {
+            outputf.push_str(&format!("{color}{pixels:?}").replace(" ",""));
+        } else {
+            if is_y {
+                sequenced = sequenced.replace("y", "");
+                sequenced.push('y');
+            }
+            sequenced = sequenced.replace("\"", "").replace("\\","");
+            outputf.push_str(&sequenced);
+        }
     }
     println!("OUT {OUTPUT:?}");
     let mut file = File::create("output.txt").unwrap();
-    let mut compressed = lzma::compress(outputf.as_bytes(), 9).unwrap();
+    //let mut compressed = lzma::compress(outputf.as_bytes(), 9).unwrap();
     file.write_all(outputf.as_bytes()).unwrap();
     // file.write_all(&compressed).unwrap();
 }
