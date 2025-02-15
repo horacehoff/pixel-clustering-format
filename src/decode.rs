@@ -120,16 +120,18 @@ pub fn decode(path: String) {
         }
 
         for x in working.keys() {
-            let expanded = expand_math(working[x].to_string());
+            // de-group and expand each key
+            let expanded = expand_math(x.to_string());
             let vecs = math_to_vec(expanded);
             for y in vecs {
-                let expanded = expand_math(x.to_string());
+                // expand the value
+                let expanded = expand_math(working[x].to_string());
                 let vecs = math_to_vec(expanded);
                 for z in vecs {
                     if is_y {
-                        output.put_pixel(z.parse().unwrap(), y.parse().unwrap(), image::Rgba(<[u8; 4]>::from(hex_color::HexColor::parse(&color.to_string()).unwrap().split_rgba())));
-                    } else {
                         output.put_pixel(y.parse().unwrap(), z.parse().unwrap(), image::Rgba(<[u8; 4]>::from(hex_color::HexColor::parse(&color.to_string()).unwrap().split_rgba())));
+                    } else {
+                        output.put_pixel(z.parse().unwrap(), y.parse().unwrap(), image::Rgba(<[u8; 4]>::from(hex_color::HexColor::parse(&color.to_string()).unwrap().split_rgba())));
                     }
                 }
             }

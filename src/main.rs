@@ -271,6 +271,6 @@ fn remove_dup_patterns(
 }
 
 fn main() {
-    convert("cat_pixel_art.png".to_string(), true);
-    // decode("output.txt".parse().unwrap());
+    // convert("cat_pixel_art.png".to_string(), true);
+    decode("output.txt".parse().unwrap());
 }
