@@ -80,6 +80,20 @@ pub fn decode(path: String) {
             x.pop().unwrap();
         }
         let split: Vec<&str> = x.split('{').into_iter().collect();
+        if split.len() == 1 {
+            let split: Vec<&str> = x.split('[').into_iter().collect();
+            let color = format!("#{}", split[0]);
+            let mut pixels:Vec<&str> = split[1].trim_end_matches("]").split(")").collect();
+            pixels = pixels.iter().map(|x| x.trim_start_matches("(").trim_start_matches(",").trim_end_matches(",").trim_end_matches(")").trim_start_matches("(").trim_start_matches(",").trim_end_matches(",").trim_end_matches(")")).collect();
+            pixels.retain(|x| !x.is_empty());
+            for pixel in pixels {
+                let split: Vec<&str> = pixel.split(',').into_iter().collect();
+                let x = split[0].parse().unwrap();
+                let y = split[1].parse().unwrap();
+                output.put_pixel(x, y, image::Rgba(<[u8; 4]>::from(hex_color::HexColor::parse(&color.to_string()).unwrap().split_rgba())));
+            }
+            continue;
+        }
         let color = format!("#{}", split[0]);
         let mut pixels = format!("{{{}", split[1]);
         // VERY BAD CODE BUT IT WORKS

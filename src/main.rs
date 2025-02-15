@@ -252,7 +252,7 @@ fn remove_dup_patterns(
 fn main() {
     // static COMPRESS: bool = true;
     //
-    // let mut compressed = convert("cat_pixel_art.png".to_string());
+    // let mut compressed = convert("fig1.png".to_string());
     //
     // compressed = remove_dup_patterns(compressed, 2, 4);
     //
