@@ -166,32 +166,36 @@ fn convert(path: &str,
     for (color, pixels) in px_colors {
         let mut grouped_coords: HashMap<String, Vec<u32>> = Default::default();
         let mut y_coords: HashMap<String, Vec<u32>> = Default::default();
+        let mut is_y = false;
         for pixel in &pixels {
             // group by abscissa
-            if !grouped_coords.contains_key(&format!("{}", pixel.0)) {
-                grouped_coords.insert(format!("{}", pixel.0), vec![pixel.1]);
+            let key = format!("{}", pixel.0);
+            if !grouped_coords.contains_key(&key) {
+                grouped_coords.insert(key, vec![pixel.1]);
             } else {
                 grouped_coords
-                    .get_mut(&format!("{}", pixel.0))
+                    .get_mut(&key)
                     .unwrap()
                     .push(pixel.1);
             }
             // group by ordinate (add "y" to be able to differentiate it)
-            if !y_coords.contains_key(&format!("y{}", pixel.1)) {
-                y_coords.insert(format!("y{}", pixel.1), vec![pixel.0]);
+            let key = format!("{}", pixel.1);
+            if !y_coords.contains_key(&key) {
+                y_coords.insert(key, vec![pixel.0]);
             } else {
                 y_coords
-                    .get_mut(&format!("y{}", pixel.1))
+                    .get_mut(&key)
                     .unwrap()
                     .push(pixel.0);
             }
         }
-        if format!("{grouped_coords:?}").len() > format!("{y_coords:?}").replace("y","").len() {
+        if format!("{grouped_coords:?}").len() > format!("{y_coords:?}").len() {
             grouped_coords = y_coords;
+            is_y = true;
         }
 
         let export_hash: HashMap<String, String> = vec_to_math(grouped_coords);
-        let (output, is_y) = group_by_key(export_hash);
+        let (output, _) = group_by_key(export_hash);
         let mut sequenced = format!("{color}{output:?}").replace(" ", "");
 
         if format!("{output:?}").replace("y","").replace('"',"").len() > format!("{pixels:?}").len() {
