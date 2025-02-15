@@ -110,9 +110,12 @@ pub fn decode(path: String) {
             let vecs = math_to_vec(expanded);
             let value = &working[x];
             for y in vecs {
-                intermediary.insert(value.to_string(), y);
+                let expanded = expand_math(value.to_string());
+                let vecs = math_to_vec(expanded);
+                for z in vecs {
+                    output.put_pixel(y.parse().unwrap(), z.parse().unwrap(), image::Rgba(<[u8; 4]>::from(hex_color::HexColor::parse(&color.to_string()).unwrap().split_rgba())));
+                }
             }
-
         }
 
 
