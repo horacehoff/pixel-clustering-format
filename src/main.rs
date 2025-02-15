@@ -1,7 +1,7 @@
 use rayon::iter::{ParallelBridge, ParallelIterator};
-use std::fs;
 use std::fs::File;
 use std::io::Write;
+use std::{env, fs};
 mod decode;
 
 use crate::decode::decode;
@@ -63,25 +63,11 @@ fn vec_to_math(input: HashMap<String, Vec<u32>>) -> HashMap<String, String> {
     export_hash
 }
 
-fn group_by_key(input: HashMap<String, String>) -> (HashMap<String, String>, bool) {
+fn group_by_key(input: HashMap<String, String>) -> HashMap<String, String> {
     let mut new: HashMap<String, Vec<u32>> = Default::default();
-    let mut is_y = false;
     for x in input.keys() {
         if !new.contains_key(&input[x]) {
-            if x.contains("y") {
-                is_y = true;
-                new.insert(
-                    input[x].clone(),
-                    vec![x.clone().replace("y", "").parse().unwrap()],
-                );
-            } else {
-                new.insert(input[x].clone(), vec![x.clone().parse().unwrap()]);
-            }
-        } else if x.contains("y") {
-            is_y = true;
-            new.get_mut(&input[x])
-                .unwrap()
-                .push(x.replace("y", "").parse().unwrap());
+            new.insert(input[x].clone(), vec![x.clone().parse().unwrap()]);
         } else {
             new.get_mut(&input[x]).unwrap().push(x.parse().unwrap());
         }
@@ -89,7 +75,7 @@ fn group_by_key(input: HashMap<String, String>) -> (HashMap<String, String>, boo
     for x in new.values_mut() {
         x.sort();
     }
-    (vec_to_math(new), is_y)
+    vec_to_math(new)
 }
 
 
@@ -111,14 +97,14 @@ fn convert(path: &str,
         let mut color = HexColor::rgba(colors[0], colors[1], colors[2], colors[3])
             .display_rgba()
             .to_string();
-        let indexable: Vec<(usize, char)> = color.chars().enumerate().collect();
+        let indexable: Vec<char> = color.chars().collect();
         if indexable[0] == indexable[1]
             && indexable[2] == indexable[3]
             && indexable[4] == indexable[5]
         {
             color.remove(1);
-            color.remove(3);
-            color.remove(5);
+            color.remove(2);
+            color.remove(4);
         }
         if color.ends_with("FF") {
             color = color.strip_suffix("FF").unwrap().to_string();
@@ -178,7 +164,7 @@ fn convert(path: &str,
                     .unwrap()
                     .push(pixel.1);
             }
-            // group by ordinate (add "y" to be able to differentiate it)
+            // group by ordinate
             let key = format!("{}", pixel.1);
             if !y_coords.contains_key(&key) {
                 y_coords.insert(key, vec![pixel.0]);
@@ -195,14 +181,13 @@ fn convert(path: &str,
         }
 
         let export_hash: HashMap<String, String> = vec_to_math(grouped_coords);
-        let (output, _) = group_by_key(export_hash);
-        let mut sequenced = format!("{color}{output:?}").replace(" ", "");
+        let output = group_by_key(export_hash);
+        let mut sequenced = format!("{color}{output:?}").replace(" ", "").replace('"', "");
 
-        if format!("{output:?}").replace("y","").replace('"',"").len() > format!("{pixels:?}").len() {
+        if format!("{output:?}").replace('"', "").len() > format!("{pixels:?}").len() {
             outputf.push_str(&format!("{color}{pixels:?}").replace(" ", ""));
         } else {
             if is_y {
-                sequenced = sequenced.replace("y", "");
                 sequenced.push('y');
             }
             sequenced = sequenced.replace("\"", "").replace("\\", "");
@@ -295,6 +280,10 @@ fn remove_dup_patterns(
 }
 
 fn main() {
-    //convert("fig1.png", "fig1.txt", false, true);
-    decode("fig1.txt".parse().unwrap());
+    let args: Vec<String> = env::args().collect();
+    if args.contains(&"-d".to_string()) {
+        decode(args[1].clone());
+    } else {
+        convert(&args[1], "fig1.txt", !args.contains(&"-nc".to_string()), args.contains(&"-v".to_string()));
+    }
 }
