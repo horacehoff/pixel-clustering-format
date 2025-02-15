@@ -1,7 +1,7 @@
+use rayon::iter::{ParallelBridge, ParallelIterator};
 use std::fs;
 use std::fs::File;
 use std::io::Write;
-use rayon::iter::{ParallelBridge, ParallelIterator};
 mod decode;
 
 use crate::decode::decode;
@@ -209,7 +209,7 @@ fn convert(path: &str,
         }
     }
     let mut compressed = outputf;
-    compressed = remove_dup_patterns(compressed, 2, 3, verbose);
+    compressed = remove_dup_patterns(compressed, 2, 4, verbose);
 
     let mut file = File::create(output_file).unwrap();
     if compress {
@@ -291,6 +291,6 @@ fn remove_dup_patterns(
 }
 
 fn main() {
-    convert("fig1.png", "fig1.txt", true, false);
-    // decode("output.txt".parse().unwrap());
+    //convert("fig1.png", "fig1.txt", false, true);
+    decode("fig1.txt".parse().unwrap());
 }

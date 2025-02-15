@@ -1,11 +1,11 @@
 use ahash::HashMap;
+use colored::Colorize;
 use image::RgbaImage;
+use indicatif::ProgressBar;
 use lzma_rust::{LZMA2Options, LZMA2Reader};
 use rayon::iter::{IntoParallelRefIterator, ParallelIterator};
 use std::fs::File;
 use std::io::Read;
-use colored::Colorize;
-use indicatif::ProgressBar;
 
 pub fn expand_math(s: String) -> String {
     let parts: Vec<String> = s.split('+').map(|x| x.to_string()).collect();
@@ -49,7 +49,10 @@ pub fn decode(path: String) {
     let mut decompressed = Vec::new();
 
     let mut r = LZMA2Reader::new(&contents[..], options.dict_size, None);
-    r.read_to_end(&mut decompressed).unwrap();
+    r.read_to_end(&mut decompressed).unwrap_or_else(|_| {
+        decompressed = contents;
+        0
+    });
 
     let result = String::from_utf8(decompressed).unwrap();
     let mut colors: Vec<String> = result.split('%').map(|x| x.to_string()).collect();
