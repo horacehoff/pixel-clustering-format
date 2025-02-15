@@ -4,6 +4,8 @@ use lzma_rust::{LZMA2Options, LZMA2Reader};
 use rayon::iter::{IntoParallelRefIterator, ParallelIterator};
 use std::fs::File;
 use std::io::Read;
+use colored::Colorize;
+use indicatif::ProgressBar;
 
 pub fn expand_math(s: String) -> String {
     let mut current = '0';
@@ -39,7 +41,7 @@ pub fn math_to_vec(s: String) -> Vec<String> {
 }
 
 pub fn decode(path: String) {
-    let mut input = File::open(path).unwrap();
+    let mut input = File::open(path.to_string()).unwrap();
     let mut contents = vec![];
     input.read_to_end(&mut contents).unwrap();
 
@@ -72,7 +74,8 @@ pub fn decode(path: String) {
 
     let mut colors: Vec<String> = colors.remove(0).split("#").map(|x| x.to_string()).collect();
     colors.retain(|x| !x.is_empty());
-    println!("COLORS{colors:?}");
+    println!("Decoding {}...", path.blue());
+    let bar = ProgressBar::new(colors.len() as u64);
     for x in colors.iter_mut() {
         let mut is_y = false;
         if x.ends_with("y") {
@@ -136,7 +139,12 @@ pub fn decode(path: String) {
                 }
             }
         }
+        bar.inc(1);
     }
+    bar.finish();
 
-    output.save("test.png").unwrap();
+    let output_file = "test.png";
+    output.save(output_file).unwrap();
+    println!("Saved to {}.", output_file.blue());
+
 }

@@ -274,6 +274,6 @@ fn remove_dup_patterns(
 }
 
 fn main() {
-    convert("fig1.png".to_string(), true);
-    // decode("output.txt".parse().unwrap());
+    // convert("fig1.png".to_string(), true);
+    decode("output.txt".parse().unwrap());
 }
