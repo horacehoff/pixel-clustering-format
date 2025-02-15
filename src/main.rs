@@ -94,11 +94,12 @@ fn group_by_key(input: HashMap<String, String>) -> (HashMap<String, String>, boo
 
 
 #[const_currying]
-fn convert(path: String,
+fn convert(path: &str,
+           output_file:&str,
            #[maybe_const(dispatch = compress, consts = [true, false])]compress:bool,
            #[maybe_const(dispatch = verbose, consts = [true, false])]verbose: bool) {
     println!("Converting {}", path.blue());
-    let image = open(path.to_string()).unwrap().into_rgba8();
+    let image = open(path).unwrap().into_rgba8();
     let width: u32 = image.width();
     let height: u32 = image.height();
     let mut x = 0;
@@ -207,11 +208,9 @@ fn convert(path: String,
             bar.inc(1);
         }
     }
-    // outputf
     let mut compressed = outputf;
     compressed = remove_dup_patterns(compressed, 2, 3, verbose);
 
-    let output_file = "output.txt";
     let mut file = File::create(output_file).unwrap();
     if compress {
         let mut out = Vec::new();
@@ -292,6 +291,6 @@ fn remove_dup_patterns(
 }
 
 fn main() {
-    convert("fig1.png".to_string(), true, false);
+    convert("fig1.png", "fig1.txt", true, false);
     // decode("output.txt".parse().unwrap());
 }

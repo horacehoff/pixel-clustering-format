@@ -8,10 +8,8 @@ use colored::Colorize;
 use indicatif::ProgressBar;
 
 pub fn expand_math(s: String) -> String {
-    let mut current = '0';
-    let mut parts: Vec<String> = s.split('+').map(|x| x.to_string()).collect();
+    let parts: Vec<String> = s.split('+').map(|x| x.to_string()).collect();
     let mut output: String = String::new();
-    //println!("{parts:?}");
     for x in parts {
         if !x.contains("*") {
             output.push('+');
@@ -34,14 +32,14 @@ pub fn math_to_vec(s: String) -> Vec<String> {
     let mut output: Vec<String> = Vec::with_capacity(splits.len());
     let mut count: u32 = 0;
     for x in splits {
-        count = count + x;
+        count += x;
         output.push(count.to_string())
     }
     output
 }
 
 pub fn decode(path: String) {
-    let mut input = File::open(path.to_string()).unwrap();
+    let mut input = File::open(path.clone()).unwrap();
     let mut contents = vec![];
     input.read_to_end(&mut contents).unwrap();
 
@@ -82,16 +80,16 @@ pub fn decode(path: String) {
             is_y = true;
             x.pop().unwrap();
         }
-        let split: Vec<&str> = x.split('{').into_iter().collect();
+        let split: Vec<&str> = x.split('{').collect();
         // if pixel list is just a plain array of tuples (x,y)
         if split.len() == 1 {
-            let split: Vec<&str> = x.split('[').into_iter().collect();
+            let split: Vec<&str> = x.split('[').collect();
             let color = format!("#{}", split[0]);
             let mut pixels:Vec<&str> = split[1].trim_end_matches("]").split(")").collect();
             pixels = pixels.iter().map(|x| x.trim_start_matches("(").trim_start_matches(",").trim_end_matches(",").trim_end_matches(")").trim_start_matches("(").trim_start_matches(",").trim_end_matches(",").trim_end_matches(")")).collect();
             pixels.retain(|x| !x.is_empty());
             for pixel in pixels {
-                let split: Vec<&str> = pixel.split(',').into_iter().collect();
+                let split: Vec<&str> = pixel.split(',').collect();
                 let x = split[0].parse().unwrap();
                 let y = split[1].parse().unwrap();
                 output.put_pixel(x, y, image::Rgba(<[u8; 4]>::from(hex_color::HexColor::parse(&color.to_string()).unwrap().split_rgba())));
