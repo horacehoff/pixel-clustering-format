@@ -87,7 +87,7 @@ fn group_by_key(input: HashMap<String, String>) -> (HashMap<String, String>, boo
     (vec_to_math(new), is_y)
 }
 
-fn convert(path: String) -> String {
+fn convert(path: String, compress:bool) {
     let image = open(path).unwrap().into_rgba8();
     let width: u32 = image.width();
     let height: u32 = image.height();
@@ -185,7 +185,28 @@ fn convert(path: String) -> String {
             outputf.push_str(&sequenced);
         }
     }
-    outputf
+    // outputf
+
+    let compressed = remove_dup_patterns(outputf, 2, 4);
+
+    let mut file = File::create("output.txt").unwrap();
+    if compress {
+        let mut out = Vec::new();
+        let mut options = LZMA2Options::with_preset(9);
+        options.dict_size = LZMA2Options::DICT_SIZE_DEFAULT;
+        {
+            let mut w = LZMA2Writer::new(CountingWriter::new(&mut out), &options);
+            w.write_all(compressed.as_bytes()).unwrap();
+            w.write(&[]).unwrap();
+        }
+        file.write_all(&out).unwrap();
+    } else {
+        file.write_all(&compressed.as_bytes()).unwrap();
+    }
+
+
+
+
 }
 
 fn find_pattern(target: String, step: usize) -> (String, usize) {
@@ -250,27 +271,6 @@ fn remove_dup_patterns(
 }
 
 fn main() {
-    // static COMPRESS: bool = true;
-    //
-    // let mut compressed = convert("fig1.png".to_string());
-    //
-    // compressed = remove_dup_patterns(compressed, 2, 4);
-    //
-    // let mut file = File::create("output.txt").unwrap();
-    // if COMPRESS {
-    //     let mut out = Vec::new();
-    //     let mut options = LZMA2Options::with_preset(9);
-    //     options.dict_size = LZMA2Options::DICT_SIZE_DEFAULT;
-    //     {
-    //         let mut w = LZMA2Writer::new(CountingWriter::new(&mut out), &options);
-    //         w.write_all(compressed.as_bytes()).unwrap();
-    //         w.write(&[]).unwrap();
-    //     }
-    //     file.write_all(&out).unwrap();
-    // } else {
-    //     file.write_all(&compressed.as_bytes()).unwrap();
-    // }
-
-    decode("output.txt".parse().unwrap());
-
+    convert("cat_pixel_art.png".to_string(), true);
+    // decode("output.txt".parse().unwrap());
 }

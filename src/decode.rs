@@ -80,6 +80,7 @@ pub fn decode(path: String) {
             x.pop().unwrap();
         }
         let split: Vec<&str> = x.split('{').into_iter().collect();
+        // if pixel list is just a plain array of tuples (x,y)
         if split.len() == 1 {
             let split: Vec<&str> = x.split('[').into_iter().collect();
             let color = format!("#{}", split[0]);
