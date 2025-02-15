@@ -1,3 +1,5 @@
+use std::fs::File;
+use std::io::Write;
 use rayon::iter::ParallelIterator;
 mod decode;
 
@@ -5,6 +7,7 @@ use crate::decode::decode;
 use ahash::HashMap;
 use hex_color::HexColor;
 use image::{open, Pixel};
+use lzma_rust::{CountingWriter, LZMA2Options, LZMA2Writer};
 use rayon::iter::IntoParallelIterator;
 
 #[derive(Debug)]

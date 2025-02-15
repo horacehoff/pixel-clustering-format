@@ -104,7 +104,6 @@ pub fn decode(path: String) {
             working.insert(x.0.to_string(), x.1.as_str().unwrap().to_string());
         }
 
-        let mut intermediary: HashMap<String, String> = HashMap::default();
         for x in working.keys() {
             let expanded = expand_math(working[x].to_string());
             let vecs = math_to_vec(expanded);
@@ -112,13 +111,14 @@ pub fn decode(path: String) {
                 let expanded = expand_math(x.to_string());
                 let vecs = math_to_vec(expanded);
                 for z in vecs {
-                    output.put_pixel(z.parse().unwrap(), y.parse().unwrap(), image::Rgba(<[u8; 4]>::from(hex_color::HexColor::parse(&color.to_string()).unwrap().split_rgba())));
+                    if is_y {
+                        output.put_pixel(z.parse().unwrap(), y.parse().unwrap(), image::Rgba(<[u8; 4]>::from(hex_color::HexColor::parse(&color.to_string()).unwrap().split_rgba())));
+                    } else {
+                        output.put_pixel(y.parse().unwrap(), z.parse().unwrap(), image::Rgba(<[u8; 4]>::from(hex_color::HexColor::parse(&color.to_string()).unwrap().split_rgba())));
+                    }
                 }
             }
         }
-
-
-        println!("{intermediary:?}\n\n");
     }
 
     output.save("test.png").unwrap();
