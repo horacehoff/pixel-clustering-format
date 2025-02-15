@@ -1,6 +1,6 @@
 use std::fs::File;
 use std::io::Write;
-use rayon::iter::ParallelIterator;
+use rayon::iter::{ParallelBridge, ParallelIterator};
 mod decode;
 
 use crate::decode::decode;
@@ -9,6 +9,7 @@ use hex_color::HexColor;
 use image::{open, Pixel};
 use lzma_rust::{CountingWriter, LZMA2Options, LZMA2Writer};
 use rayon::iter::IntoParallelIterator;
+use rayon::slice::ParallelSliceMut;
 
 #[derive(Debug)]
 pub struct RPixel {
@@ -166,7 +167,7 @@ fn convert(path: String, compress:bool) {
                     .push(pixel.0);
             }
         }
-        if format!("{grouped_coords:?}").len() > format!("{y_coords:?}").len() {
+        if format!("{grouped_coords:?}").len() > format!("{y_coords:?}").replace("y","").len() {
             grouped_coords = y_coords;
         }
 
@@ -174,7 +175,7 @@ fn convert(path: String, compress:bool) {
         let (output, is_y) = group_by_key(export_hash);
         let mut sequenced = format!("{color}{output:?}").replace(" ", "");
 
-        if format!("{output:?}").len() > format!("{pixels:?}").len() {
+        if format!("{output:?}").replace("y","").replace('"',"").len() > format!("{pixels:?}").len() {
             outputf.push_str(&format!("{color}{pixels:?}").replace(" ", ""));
         } else {
             if is_y {
@@ -186,14 +187,15 @@ fn convert(path: String, compress:bool) {
         }
     }
     // outputf
-
-    let compressed = remove_dup_patterns(outputf, 2, 4);
+    let mut compressed = outputf;
+    compressed = remove_dup_patterns(compressed, 2, 3);
 
     let mut file = File::create("output.txt").unwrap();
     if compress {
         let mut out = Vec::new();
         let mut options = LZMA2Options::with_preset(9);
-        options.dict_size = LZMA2Options::DICT_SIZE_DEFAULT;
+        options.dict_size = 8000000;
+        options.lc = 4;
         {
             let mut w = LZMA2Writer::new(CountingWriter::new(&mut out), &options);
             w.write_all(compressed.as_bytes()).unwrap();
@@ -209,23 +211,25 @@ fn convert(path: String, compress:bool) {
 
 }
 
-fn find_pattern(target: String, step: usize) -> (String, usize) {
-    let mut patterns: Vec<String> = Vec::with_capacity(target.len());
+fn find_pattern(target: String, step: usize) -> Vec<(String, usize)> {
+    let mut patterns: Vec<(String, usize)> = Vec::with_capacity(target.len());
     let mut i = 0;
     let mut seen = std::collections::HashSet::new();
     while i + step <= target.len() {
         let slice = &target[i..i + step];
         if seen.insert(slice) {
-            patterns.push(slice.to_string());
+            patterns.push((slice.to_string(), target.matches(slice).count()));
         }
         i += 1;
     }
-    // return => (pattern, max_pattern_count)
-    patterns
-        .iter()
-        .map(|x| (x.to_string(), target.matches(x).count()))
-        .max_by_key(|&(_, count)| count)
-        .unwrap()
+    patterns.par_sort_by(|a,b| b.1.cmp(&a.1));
+    patterns.first_chunk::<2>().unwrap().to_vec()
+
+    // patterns
+    //     .iter()
+    //     .map(|x| (x.to_string(), target.matches(x).count()))
+    //     .filter(|(_, i)| i > &(50 * step))
+    //     .collect()
 }
 
 fn remove_dup_patterns(
@@ -233,21 +237,20 @@ fn remove_dup_patterns(
     min_pattern_size: usize,
     max_pattern_size: usize,
 ) -> String {
-    let mut worthy_patterns: Vec<(String, isize)> = (min_pattern_size..=max_pattern_size)
-        .into_par_iter()
-        .map(|step| {
-            let (pattern, count) = find_pattern(compressed.to_string(), step);
-            println!("PROCESSED N.{step}");
-            if count != 1 {
-                let savings: isize = (count as isize) * (pattern.len() as isize - 2) - 1;
-                (pattern, savings)
-            } else {
-                (String::from(""), -99999)
+    let mut worthy_patterns: Vec<(String, isize)> = Vec::new();
+    (min_pattern_size..=max_pattern_size)
+        // .into_par_iter()
+        .for_each(|step| {
+            for (pattern,count) in find_pattern(compressed.to_string(), step) {
+                println!("PROCESSED N.{step}");
+                if count != 1 {
+                    let savings: isize = (count as isize) * (pattern.len() as isize - 2) - 1;
+                    worthy_patterns.push((pattern, savings));
+                }
             }
-        })
-        .collect();
-
-    worthy_patterns.sort_by(|a, b| b.1.cmp(&a.1));
+            // let (pattern, count) = find_pattern(compressed.to_string(), step);
+        });
+    worthy_patterns.par_sort_by(|a, b| b.1.cmp(&a.1));
 
     println!("PATTERNS ARE {worthy_patterns:?}");
     let mut use_letter = 0;
@@ -257,7 +260,7 @@ fn remove_dup_patterns(
     ];
     let mut output = compressed;
     for (pattern, _) in &worthy_patterns[0..1] {
-        if output.matches(pattern).count() > 1 {
+        if output.matches(pattern).count() > 2 {
             let letter = CHARS[use_letter];
             output = output.replace(pattern, &letter.to_string());
             if use_letter == 0 {
@@ -271,6 +274,6 @@ fn remove_dup_patterns(
 }
 
 fn main() {
-    // convert("cat_pixel_art.png".to_string(), true);
-    decode("output.txt".parse().unwrap());
+    convert("fig1.png".to_string(), true);
+    // decode("output.txt".parse().unwrap());
 }
