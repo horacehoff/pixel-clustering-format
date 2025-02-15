@@ -6,6 +6,7 @@ edition = "2021"
 [dependencies]
 ahash = "0.8.11"
 colored = "3.0.0"
+const-currying = "0.0.5"
 hex_color = "3.0.0"
 image = "0.25.5"
 indicatif = "0.17.11"

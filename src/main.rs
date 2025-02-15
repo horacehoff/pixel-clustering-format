@@ -1,3 +1,4 @@
+use std::fs;
 use std::fs::File;
 use std::io::Write;
 use rayon::iter::{ParallelBridge, ParallelIterator};
@@ -5,8 +6,11 @@ mod decode;
 
 use crate::decode::decode;
 use ahash::HashMap;
+use colored::Colorize;
+use const_currying::const_currying;
 use hex_color::HexColor;
 use image::{open, Pixel};
+use indicatif::ProgressBar;
 use lzma_rust::{CountingWriter, LZMA2Options, LZMA2Writer};
 use rayon::iter::IntoParallelIterator;
 use rayon::slice::ParallelSliceMut;
@@ -88,13 +92,19 @@ fn group_by_key(input: HashMap<String, String>) -> (HashMap<String, String>, boo
     (vec_to_math(new), is_y)
 }
 
-fn convert(path: String, compress:bool) {
-    let image = open(path).unwrap().into_rgba8();
+
+#[const_currying]
+fn convert(path: String,
+           #[maybe_const(dispatch = compress, consts = [true, false])]compress:bool,
+           #[maybe_const(dispatch = verbose, consts = [true, false])]verbose: bool) {
+    println!("Converting {}", path.blue());
+    let image = open(path.to_string()).unwrap().into_rgba8();
     let width: u32 = image.width();
     let height: u32 = image.height();
     let mut x = 0;
     let mut y = 0;
     let mut temp_pixels: Vec<RPixel> = Vec::with_capacity((width * height) as usize);
+    let bar = ProgressBar::new(image.pixels().len() as u64);
     for w in image.pixels() {
         let colors = w.channels().to_vec();
         let mut color = HexColor::rgba(colors[0], colors[1], colors[2], colors[3])
@@ -120,15 +130,22 @@ fn convert(path: String, compress:bool) {
         } else {
             x += 1;
         }
+        if verbose {
+            bar.inc(1);
+        }
     }
 
     // put the pixels in a hashmap
     let mut px_colors: HashMap<String, Vec<(u32, u32)>> = Default::default();
+    let bar = ProgressBar::new(temp_pixels.len() as u64);
     for x in temp_pixels {
         if !px_colors.contains_key(&x.color) {
             px_colors.insert(x.color, vec![(x.x, x.y)]);
         } else {
             px_colors.get_mut(&x.color).unwrap().push((x.x, x.y));
+        }
+        if verbose {
+            bar.inc(1);
         }
     }
     // remove dominant color
@@ -144,6 +161,7 @@ fn convert(path: String, compress:bool) {
 
     let mut outputf: String = format!("{width}%{height}%{bg_color}%");
 
+    let bar = ProgressBar::new(px_colors.len() as u64);
     for (color, pixels) in px_colors {
         let mut grouped_coords: HashMap<String, Vec<u32>> = Default::default();
         let mut y_coords: HashMap<String, Vec<u32>> = Default::default();
@@ -185,12 +203,16 @@ fn convert(path: String, compress:bool) {
             sequenced = sequenced.replace("\"", "").replace("\\", "");
             outputf.push_str(&sequenced);
         }
+        if verbose {
+            bar.inc(1);
+        }
     }
     // outputf
     let mut compressed = outputf;
-    compressed = remove_dup_patterns(compressed, 2, 3);
+    compressed = remove_dup_patterns(compressed, 2, 3, verbose);
 
-    let mut file = File::create("output.txt").unwrap();
+    let output_file = "output.txt";
+    let mut file = File::create(output_file).unwrap();
     if compress {
         let mut out = Vec::new();
         let mut options = LZMA2Options::with_preset(9);
@@ -205,54 +227,50 @@ fn convert(path: String, compress:bool) {
     } else {
         file.write_all(&compressed.as_bytes()).unwrap();
     }
-
-
-
-
+    println!("Saved to {} - {}% of original size.", output_file.blue(), (fs::metadata(output_file).unwrap().len()*100/fs::metadata(path).unwrap().len()).to_string().blue())
 }
 
-fn find_pattern(target: String, step: usize) -> Vec<(String, usize)> {
+#[const_currying]
+fn find_pattern(target: String,
+                #[maybe_const(dispatch = step, consts = [2,3,4,5,6,7])]step: usize,
+                #[maybe_const(dispatch = verbose, consts = [true, false])]verbose:bool) -> Vec<(String, usize)> {
     let mut patterns: Vec<(String, usize)> = Vec::with_capacity(target.len());
     let mut i = 0;
     let mut seen = std::collections::HashSet::new();
+    let bar = ProgressBar::new(target.len() as u64);
     while i + step <= target.len() {
         let slice = &target[i..i + step];
         if seen.insert(slice) {
             patterns.push((slice.to_string(), target.matches(slice).count()));
         }
         i += 1;
+        if verbose {
+            bar.inc(1);
+        }
     }
     patterns.par_sort_by(|a,b| b.1.cmp(&a.1));
     patterns.first_chunk::<2>().unwrap().to_vec()
-
-    // patterns
-    //     .iter()
-    //     .map(|x| (x.to_string(), target.matches(x).count()))
-    //     .filter(|(_, i)| i > &(50 * step))
-    //     .collect()
 }
 
+
+#[const_currying]
 fn remove_dup_patterns(
     compressed: String,
-    min_pattern_size: usize,
-    max_pattern_size: usize,
+    #[maybe_const(dispatch = min_pattern_size, consts = [2,3,4,5,6,7])]min_pattern_size: usize,
+    #[maybe_const(dispatch = max_pattern_size, consts = [2,3,4,5,6,7])]max_pattern_size: usize,
+    #[maybe_const(dispatch = verbose, consts = [true, false])]verbose: bool
 ) -> String {
     let mut worthy_patterns: Vec<(String, isize)> = Vec::new();
     (min_pattern_size..=max_pattern_size)
-        // .into_par_iter()
         .for_each(|step| {
-            for (pattern,count) in find_pattern(compressed.to_string(), step) {
-                println!("PROCESSED N.{step}");
+            for (pattern,count) in find_pattern(compressed.to_string(), step,verbose) {
                 if count != 1 {
                     let savings: isize = (count as isize) * (pattern.len() as isize - 2) - 1;
                     worthy_patterns.push((pattern, savings));
                 }
             }
-            // let (pattern, count) = find_pattern(compressed.to_string(), step);
         });
     worthy_patterns.par_sort_by(|a, b| b.1.cmp(&a.1));
-
-    println!("PATTERNS ARE {worthy_patterns:?}");
     let mut use_letter = 0;
     static CHARS: [char; 27] = [
         'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r',
@@ -274,6 +292,6 @@ fn remove_dup_patterns(
 }
 
 fn main() {
-    // convert("fig1.png".to_string(), true);
-    decode("output.txt".parse().unwrap());
+    convert("fig1.png".to_string(), true, false);
+    // decode("output.txt".parse().unwrap());
 }
