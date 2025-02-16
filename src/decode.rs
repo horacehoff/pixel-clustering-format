@@ -1,4 +1,3 @@
-use ahash::HashMap;
 use colored::Colorize;
 use image::RgbaImage;
 use indicatif::ProgressBar;
@@ -100,42 +99,25 @@ pub fn decode(path: String) {
             continue;
         }
         let color = format!("#{}", split[0]);
-        let mut pixels = format!("{{{}", split[1]);
-        // VERY BAD CODE BUT IT WORKS
-        for (loc, (i, _)) in pixels.clone().match_indices(':').enumerate() {
-            pixels.insert(loc + i, '"');
-        }
-        for (loc, (i, _)) in pixels.clone().match_indices(':').enumerate() {
-            pixels.insert(loc + i + 1, '"');
-        }
-        for (loc, (i, _)) in pixels.clone().match_indices(',').enumerate() {
-            pixels.insert(loc + i, '"');
-        }
-        for (loc, (i, _)) in pixels.clone().match_indices(',').enumerate() {
-            pixels.insert(loc + i + 1, '"');
-        }
+        let mut pixels = format!("{{{}", split[1]).replace(":", "\":\"").replace(",", "\",\"");
         pixels.insert(1, '"');
         pixels.insert(pixels.len() - 1, '"');
 
         let parsed = json::parse(&pixels).unwrap();
-        let mut working: HashMap<String, String> = Default::default();
-        for x in parsed.entries() {
-            working.insert(x.0.to_string(), x.1.as_str().unwrap().to_string());
-        }
-
-        for x in working.keys() {
+        for (x, val) in parsed.entries() {
             // de-group and expand each key
             let expanded = expand_math(x.to_string());
             let vecs = math_to_vec(expanded);
             // expand the value
-            let expanded = expand_math(working[x].to_string());
+            let expanded = expand_math(val.to_string());
             let vecs2 = math_to_vec(expanded);
             for y in vecs {
                 for z in &vecs2 {
+                    let color = image::Rgba(<[u8; 4]>::from(hex_color::HexColor::parse(&color.to_string()).unwrap().split_rgba()));
                     if is_y {
-                        output.put_pixel(y.parse().unwrap(), z.parse().unwrap(), image::Rgba(<[u8; 4]>::from(hex_color::HexColor::parse(&color.to_string()).unwrap().split_rgba())));
+                        output.put_pixel(y.parse().unwrap(), z.parse().unwrap(), color);
                     } else {
-                        output.put_pixel(z.parse().unwrap(), y.parse().unwrap(), image::Rgba(<[u8; 4]>::from(hex_color::HexColor::parse(&color.to_string()).unwrap().split_rgba())));
+                        output.put_pixel(z.parse().unwrap(), y.parse().unwrap(), color);
                     }
                 }
             }
