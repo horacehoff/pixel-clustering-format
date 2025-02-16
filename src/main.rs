@@ -78,7 +78,6 @@ fn group_by_key(input: HashMap<String, String>) -> HashMap<String, String> {
     vec_to_math(new)
 }
 
-
 #[const_currying]
 fn convert(path: &str,
            output_file:&str,
@@ -181,7 +180,7 @@ fn convert(path: &str,
         }
 
         let export_hash: HashMap<String, String> = vec_to_math(grouped_coords);
-        let output = group_by_key(export_hash);
+        let mut output = group_by_key(export_hash);
         let mut sequenced = format!("{color}{output:?}").replace(" ", "").replace('"', "");
 
         if format!("{output:?}").replace('"', "").len() > format!("{pixels:?}").len() {
@@ -206,6 +205,7 @@ fn convert(path: &str,
         let mut options = LZMA2Options::with_preset(9);
         options.dict_size = 8000000;
         options.lc = 4;
+        options.depth_limit = 999999999;
         {
             let mut w = LZMA2Writer::new(CountingWriter::new(&mut out), &options);
             w.write_all(compressed.as_bytes()).unwrap();

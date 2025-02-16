@@ -43,7 +43,7 @@ pub fn decode(path: String) {
     let mut contents = vec![];
     input.read_to_end(&mut contents).unwrap();
 
-    let mut options = LZMA2Options::with_preset(6);
+    let mut options = LZMA2Options::with_preset(9);
     options.dict_size = LZMA2Options::DICT_SIZE_DEFAULT;
 
     let mut decompressed = Vec::new();
@@ -127,11 +127,11 @@ pub fn decode(path: String) {
             // de-group and expand each key
             let expanded = expand_math(x.to_string());
             let vecs = math_to_vec(expanded);
+            // expand the value
+            let expanded = expand_math(working[x].to_string());
+            let vecs2 = math_to_vec(expanded);
             for y in vecs {
-                // expand the value
-                let expanded = expand_math(working[x].to_string());
-                let vecs = math_to_vec(expanded);
-                for z in vecs {
+                for z in &vecs2 {
                     if is_y {
                         output.put_pixel(y.parse().unwrap(), z.parse().unwrap(), image::Rgba(<[u8; 4]>::from(hex_color::HexColor::parse(&color.to_string()).unwrap().split_rgba())));
                     } else {
