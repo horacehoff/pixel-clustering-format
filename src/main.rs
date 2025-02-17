@@ -282,7 +282,7 @@ fn remove_dup_patterns(
 fn main() {
     let args: Vec<String> = env::args().collect();
     if args.contains(&"-d".to_string()) {
-        decode(args[1].clone());
+        decode(args[1].clone(), args.contains(&"-v".to_string()));
     } else {
         convert(&args[1], "fig1.txt", !args.contains(&"-nc".to_string()), args.contains(&"-v".to_string()));
     }

@@ -1,4 +1,5 @@
 use colored::Colorize;
+use const_currying::const_currying;
 use image::RgbaImage;
 use indicatif::ProgressBar;
 use lzma_rust::{LZMA2Options, LZMA2Reader};
@@ -37,7 +38,9 @@ pub fn math_to_vec(s: String) -> Vec<String> {
     output
 }
 
-pub fn decode(path: String) {
+#[const_currying]
+pub fn decode(path: String,
+              #[maybe_const(dispatch = verbose, consts = [true, false])]verbose: bool) {
     let mut input = File::open(path.clone()).unwrap();
     let mut contents = vec![];
     input.read_to_end(&mut contents).unwrap();
@@ -122,9 +125,10 @@ pub fn decode(path: String) {
                 }
             }
         }
-        bar.inc(1);
+        if verbose {
+            bar.inc(1);
+        }
     }
-    bar.finish();
 
     let output_file = "test.png";
     output.save(output_file).unwrap();
