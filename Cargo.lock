@@ -567,15 +567,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "lzma-rust"
-version = "0.1.7"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "5baab2bbbd7d75a144d671e9ff79270e903957d92fb7386fd39034c709bd2661"
-dependencies = [
- "byteorder",
-]
-
-[[package]]
 name = "mashi-core"
 version = "0.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -714,7 +705,6 @@ dependencies = [
  "image",
  "indicatif",
  "json",
- "lzma-rust",
  "mashi-core",
  "rayon",
 ]

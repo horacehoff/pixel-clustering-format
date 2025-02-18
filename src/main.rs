@@ -1,4 +1,3 @@
-use rayon::iter::{ParallelBridge, ParallelIterator};
 use std::fs::File;
 use std::io::Write;
 use std::path::Path;
@@ -14,15 +13,7 @@ use hex_color::HexColor;
 use image::{open, Pixel};
 use indicatif::ProgressBar;
 use mashi_core::Encoder;
-use rayon::iter::IntoParallelIterator;
 use rayon::slice::ParallelSliceMut;
-
-#[derive(Debug)]
-pub struct RPixel {
-    x: u32,
-    y: u32,
-    color: String,
-}
 
 fn optimize_math_str(input: String) -> String {
     let mut nums: Vec<&str> = input.split('+').filter(|s| !s.is_empty()).collect();
@@ -82,8 +73,7 @@ fn group_by_key(input: HashMap<String, String>) -> HashMap<String, String> {
 
 #[const_currying]
 fn convert(path: &str,
-           output_file:&str,
-           #[maybe_const(dispatch = compress, consts = [true, false])]compress:bool,
+           output_file: &str,
            #[maybe_const(dispatch = verbose, consts = [true, false])]verbose: bool) {
     println!("Converting {}", path.blue());
     let image = open(path).unwrap().into_rgba8();
@@ -91,8 +81,11 @@ fn convert(path: &str,
     let height: u32 = image.height();
     let mut x = 0;
     let mut y = 0;
-    let mut temp_pixels: Vec<RPixel> = Vec::with_capacity((width * height) as usize);
+
+
+    // put the pixels in a hashmap
     let bar = ProgressBar::new(image.pixels().len() as u64);
+    let mut px_colors: HashMap<String, Vec<(u32, u32)>> = Default::default();
     for w in image.pixels() {
         let colors = w.channels().to_vec();
         let mut color = HexColor::rgba(colors[0], colors[1], colors[2], colors[3])
@@ -110,27 +103,17 @@ fn convert(path: &str,
         if color.ends_with("FF") {
             color = color.strip_suffix("FF").unwrap().to_string();
         }
-        temp_pixels.push(RPixel { x, y, color });
+        if !px_colors.contains_key(&color) {
+            px_colors.insert(color, vec![(x, y)]);
+        } else {
+            px_colors.get_mut(&color).unwrap().push((x, y));
+        }
         // if at EOL, go to start of next line
         if x == width - 1 {
             x = 0;
             y += 1;
         } else {
             x += 1;
-        }
-        if verbose {
-            bar.inc(1);
-        }
-    }
-
-    // put the pixels in a hashmap
-    let mut px_colors: HashMap<String, Vec<(u32, u32)>> = Default::default();
-    let bar = ProgressBar::new(temp_pixels.len() as u64);
-    for x in temp_pixels {
-        if !px_colors.contains_key(&x.color) {
-            px_colors.insert(x.color, vec![(x.x, x.y)]);
-        } else {
-            px_colors.get_mut(&x.color).unwrap().push((x.x, x.y));
         }
         if verbose {
             bar.inc(1);
@@ -176,12 +159,13 @@ fn convert(path: &str,
                     .push(pixel.0);
             }
         }
-        if format!("{grouped_coords:?}").len() > format!("{y_coords:?}").len() {
+        // if format!("{grouped_coords:?}").len() > format!("{y_coords:?}").len() {
+        if size_of_val(&grouped_coords) > size_of_val(&y_coords) {
             grouped_coords = y_coords;
             is_y = true;
         }
 
-        let export_hash: HashMap<String, String> = vec_to_math(grouped_coords); 
+        let export_hash: HashMap<String, String> = vec_to_math(grouped_coords);
         let mut output = group_by_key(export_hash);
         let mut sequenced = format!("{color}{output:?}").replace(" ", "").replace('"', "");
 
@@ -202,9 +186,10 @@ fn convert(path: &str,
     compressed = remove_dup_patterns(compressed, 2, 4, verbose);
 
     let mut file = File::create(output_file).unwrap();
-    if compress {
-        let mut encoder = Encoder::new();
-        let output = encoder.encode(&compressed.as_bytes());
+    let mut encoder = Encoder::new();
+    let output = encoder.encode(&compressed.as_bytes());
+
+    if size_of_val(&output) < size_of_val(compressed.as_bytes()) {
         file.write_all(&output).unwrap();
     } else {
         file.write_all(&compressed.as_bytes()).unwrap();
@@ -280,6 +265,6 @@ fn main() {
     } else {
         let file_path = args[1].to_string();
         let name = Path::new(&file_path).file_name().unwrap().to_str().unwrap().split(".").collect::<Vec<&str>>()[0].to_string();
-        convert(&args[1], &(name + ".pcf"), !args.contains(&"-nc".to_string()), args.contains(&"-v".to_string()));
+        convert(&args[1], &(name + ".pcf"), args.contains(&"-v".to_string()));
     }
 }
