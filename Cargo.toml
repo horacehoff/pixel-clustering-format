@@ -7,14 +7,13 @@ edition = "2021"
 ahash = "0.8.11"
 colored = "3.0.0"
 const-currying = "0.0.5"
-flate2 = "1.0.35"
 hex_color = "3.0.0"
 image = "0.25.5"
 indicatif = "0.17.11"
 json = "0.12.4"
 lzma-rust = "0.1.7"
 rayon = "1.10.0"
-sevenz-rust = "0.6.1"
+mashi-core = "0.1.0"
 
 [profile.release]
 opt-level = 3

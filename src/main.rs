@@ -11,7 +11,7 @@ use const_currying::const_currying;
 use hex_color::HexColor;
 use image::{open, Pixel};
 use indicatif::ProgressBar;
-use lzma_rust::{CountingWriter, LZMA2Options, LZMA2Writer};
+use mashi_core::Encoder;
 use rayon::iter::IntoParallelIterator;
 use rayon::slice::ParallelSliceMut;
 
@@ -201,17 +201,9 @@ fn convert(path: &str,
 
     let mut file = File::create(output_file).unwrap();
     if compress {
-        let mut out = Vec::new();
-        let mut options = LZMA2Options::with_preset(9);
-        options.dict_size = 8000000;
-        options.lc = 4;
-        options.depth_limit = 999999999;
-        {
-            let mut w = LZMA2Writer::new(CountingWriter::new(&mut out), &options);
-            w.write_all(compressed.as_bytes()).unwrap();
-            w.write(&[]).unwrap();
-        }
-        file.write_all(&out).unwrap();
+        let mut encoder = Encoder::new();
+        let output = encoder.encode(&compressed.as_bytes());
+        file.write_all(&output).unwrap();
     } else {
         file.write_all(&compressed.as_bytes()).unwrap();
     }
