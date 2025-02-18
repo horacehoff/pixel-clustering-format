@@ -13,6 +13,7 @@ indicatif = "0.17.11"
 json = "0.12.4"
 rayon = "1.10.0"
 mashi-core = "0.1.0"
+plotters = "0.3.7"
 
 [profile.release]
 opt-level = 3

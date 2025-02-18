@@ -44,10 +44,16 @@ pub fn decode(path: String,
     let mut contents = vec![];
     input.read_to_end(&mut contents).unwrap();
 
-    let mut decoder = Decoder::new();
-    let decompressed = decoder.decode(&contents);
+    let mut result = String::new();
 
-    let mut result = String::from_utf8(decompressed.to_vec()).unwrap();
+    let test = String::from_utf8(contents.clone()).unwrap();
+    if test.contains("%") && test.contains("#") {
+        result = test;
+    } else {
+        let mut decoder = Decoder::new();
+        let decompressed = decoder.decode(&contents);
+        result = String::from_utf8(decompressed.to_vec()).unwrap();
+    }
 
 
     // if some letters need to be replaced, replace them
@@ -59,7 +65,7 @@ pub fn decode(path: String,
         let mut parts: Vec<&str> = letters.split("$").collect();
         parts.retain(|x| !x.is_empty());
         let couples: Vec<(String, String)> = parts.iter().zip(parts.iter().skip(1)).map(|(a, b)| (b.to_string(), a.to_string())).rev().collect();
-        
+
         for (by, to) in couples {
             output = output.replace(&by, &to);
         }
