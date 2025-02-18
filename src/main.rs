@@ -181,7 +181,7 @@ fn convert(path: &str,
             is_y = true;
         }
 
-        let export_hash: HashMap<String, String> = vec_to_math(grouped_coords);
+        let export_hash: HashMap<String, String> = vec_to_math(grouped_coords); 
         let mut output = group_by_key(export_hash);
         let mut sequenced = format!("{color}{output:?}").replace(" ", "").replace('"', "");
 
