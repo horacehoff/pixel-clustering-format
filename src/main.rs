@@ -183,6 +183,7 @@ fn convert(path: &str,
         }
     }
     let mut compressed = outputf;
+
     compressed = remove_dup_patterns(compressed, 2, 4, verbose);
 
     let mut file = File::create(output_file).unwrap();
@@ -241,7 +242,7 @@ fn remove_dup_patterns(
     let mut use_letter = 0;
     static CHARS: [char; 27] = [
         'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r',
-        's', 't', 'u', 'v', 'w', 'x', 'z', '&', '_'
+        's', 't', 'u', 'v', 'w', 'x', 'z', '&', '-'
     ];
     let mut output = compressed;
     for (pattern, _) in &worthy_patterns[0..1] {
@@ -249,7 +250,7 @@ fn remove_dup_patterns(
             let letter = CHARS[use_letter];
             output = output.replace(pattern, &letter.to_string());
             if use_letter == 0 {
-                output.push('%');
+                output.push('_');
             }
             output.push_str(&format!("${pattern}${letter}"));
             use_letter += 1;

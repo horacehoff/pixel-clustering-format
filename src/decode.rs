@@ -3,7 +3,6 @@ use const_currying::const_currying;
 use image::RgbaImage;
 use indicatif::ProgressBar;
 use mashi_core::Decoder;
-use rayon::iter::{IntoParallelRefIterator, ParallelIterator};
 use std::fs::File;
 use std::io::Read;
 
@@ -48,24 +47,31 @@ pub fn decode(path: String,
     let mut decoder = Decoder::new();
     let decompressed = decoder.decode(&contents);
 
-    let result = String::from_utf8(decompressed.to_vec()).unwrap();
+    let mut result = String::from_utf8(decompressed.to_vec()).unwrap();
+
+
+    // if some letters need to be replaced, replace them
+    if result.contains("_") {
+        let matcher = result.split("_").collect::<Vec<&str>>();
+        let mut output: String = matcher[0].to_string();
+        let letters = matcher[1];
+
+        let mut parts: Vec<&str> = letters.split("$").collect();
+        parts.retain(|x| !x.is_empty());
+        let couples: Vec<(String, String)> = parts.iter().zip(parts.iter().skip(1)).map(|(a, b)| (b.to_string(), a.to_string())).collect();
+        for (by, to) in couples {
+            output = output.replace(&by, &to);
+        }
+        result = output;
+    }
+
+
     let mut colors: Vec<String> = result.split('%').map(|x| x.to_string()).collect();
     let width: u32 = colors.remove(0).parse().unwrap();
     let height: u32 = colors.remove(0).parse().unwrap();
     let bg_color = colors.remove(0);
     let mut output = RgbaImage::from_pixel(width, height, image::Rgba(<[u8; 4]>::from(hex_color::HexColor::parse(&bg_color).unwrap().split_rgba())));
 
-
-    // if some letters need to be replaced, replace them
-    if colors.last().unwrap().contains("$") {
-        let replacements = colors.remove(colors.len() - 1);
-        let mut parts: Vec<&str> = replacements.split("$").collect();
-        parts.retain(|x| !x.is_empty());
-        let couples: Vec<(String, String)> = parts.iter().zip(parts.iter().skip(1)).map(|(a, b)| (b.to_string(), a.to_string())).collect();
-        for (by, to) in couples {
-            colors = colors.par_iter().map(|x| x.replace(&by, &to)).collect();
-        }
-    }
 
     let mut colors: Vec<String> = colors.remove(0).split("#").map(|x| x.to_string()).collect();
     colors.retain(|x| !x.is_empty());
