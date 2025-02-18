@@ -191,11 +191,13 @@ fn convert(path: &str,
     let mut encoder = Encoder::new();
     let output = encoder.encode(&compressed.as_bytes());
 
-    if size_of_val(&output) < size_of_val(compressed.as_bytes()) {
-        file.write_all(&output).unwrap();
-    } else {
-        file.write_all(&compressed.as_bytes()).unwrap();
-    }
+    file.write_all(&compressed.as_bytes()).unwrap();
+
+    // if size_of_val(&output) < size_of_val(compressed.as_bytes()) {
+    //     file.write_all(&output).unwrap();
+    // } else {
+    //     file.write_all(&compressed.as_bytes()).unwrap();
+    // }
     println!("Saved to {} - {}% of original size.", output_file.blue(), (fs::metadata(output_file).unwrap().len()*100/fs::metadata(path).unwrap().len()).to_string().blue())
 }
 
@@ -259,6 +261,7 @@ fn remove_dup_patterns(
 
 fn main() {
     let args: Vec<String> = env::args().collect();
+    println!("{args:?}");
     if args.contains(&"--decode".to_string()) {
         decode(args[1].clone(), args.contains(&"--verbose".to_string()));
     } else {
