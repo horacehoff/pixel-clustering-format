@@ -34,7 +34,7 @@ PCF supports transparency, and first reads colors in the RGBA format and then st
 ## Installation
 
 ```bash
-git clone https://github.com/just-a-mango//pixel-clustering-image-format
+git clone https://github.com/just-a-mango/pixel-clustering-image-format
 ```
 
 ## Usage
@@ -87,10 +87,6 @@ cargo run --release -- [filename] [--verbose] [--decode]
 ### PCF:
 173 kB (22% smaller)
 
-
-## Contributing
-
-Feel free to submit pull requests. If you're considering significant changes, please open an issue first to discuss your ideas.
 
 ## License
 
