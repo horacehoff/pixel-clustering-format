@@ -40,17 +40,9 @@ git clone https://github.com/just-a-mango//pixel-clustering-image-format
 ## Usage
 
 ```sh
-python-legacy convert.py [filename] [-o] [-v] [-d]
-
-python-legacy back_convert.py [filename]
-
-positional arguments:
-  filename
-
-options:
-  -o, --output    The .pcf output file
-  -v, --verbose
-  -d, --dev       Disable LZMA compression (makes the file readable)
+cargo run --release -- [filename] [--verbose] [--decode]
+// OR
+./pcf [filename] [--verbose] [--decode]
 ```
 
 ## Comparisons with PNG
