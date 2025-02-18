@@ -6,7 +6,7 @@ use std::{env, fs};
 mod decode;
 
 use crate::decode::decode;
-use ahash::HashMap;
+use ahash::{HashMap, HashMapExt};
 use colored::Colorize;
 use const_currying::const_currying;
 use hex_color::HexColor;
@@ -186,6 +186,7 @@ fn convert(path: &str,
 
     compressed = remove_dup_patterns(compressed, 2, 4, verbose);
 
+
     let mut file = File::create(output_file).unwrap();
     let mut encoder = Encoder::new();
     let output = encoder.encode(&compressed.as_bytes());
@@ -202,22 +203,19 @@ fn convert(path: &str,
 fn find_pattern(target: String,
                 #[maybe_const(dispatch = step, consts = [2,3,4,5,6,7])]step: usize,
                 #[maybe_const(dispatch = verbose, consts = [true, false])]verbose:bool) -> Vec<(String, usize)> {
-    let mut patterns: Vec<(String, usize)> = Vec::with_capacity(target.len());
-    let mut i = 0;
-    let mut seen = std::collections::HashSet::new();
+    let mut patterns = HashMap::with_capacity(target.len());
     let bar = ProgressBar::new(target.len() as u64);
-    while i + step <= target.len() {
+    for i in 0..=target.len().saturating_sub(step) {
         let slice = &target[i..i + step];
-        if seen.insert(slice) {
-            patterns.push((slice.to_string(), target.matches(slice).count()));
-        }
-        i += 1;
+        *patterns.entry(slice).or_insert(0) += 1;
         if verbose {
             bar.inc(1);
         }
     }
-    patterns.par_sort_by(|a,b| b.1.cmp(&a.1));
-    patterns.first_chunk::<2>().unwrap().to_vec()
+
+    let mut new: Vec<_> = patterns.into_iter().collect();
+    new.par_sort_by(|a, b| b.1.cmp(&a.1));
+    new.into_iter().take(2).map(|(s, c)| (s.to_string(), c)).collect()
 }
 
 

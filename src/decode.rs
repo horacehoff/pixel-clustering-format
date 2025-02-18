@@ -58,7 +58,8 @@ pub fn decode(path: String,
 
         let mut parts: Vec<&str> = letters.split("$").collect();
         parts.retain(|x| !x.is_empty());
-        let couples: Vec<(String, String)> = parts.iter().zip(parts.iter().skip(1)).map(|(a, b)| (b.to_string(), a.to_string())).collect();
+        let couples: Vec<(String, String)> = parts.iter().zip(parts.iter().skip(1)).map(|(a, b)| (b.to_string(), a.to_string())).rev().collect();
+        
         for (by, to) in couples {
             output = output.replace(&by, &to);
         }
