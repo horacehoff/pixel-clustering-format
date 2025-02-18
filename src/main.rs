@@ -1,10 +1,11 @@
 use std::fs::File;
 use std::io::Write;
-use std::fs;
+use std::{env, fs};
 
 mod decode;
 mod data;
 
+use crate::decode::decode;
 use ahash::{HashMap, HashMapExt};
 use colored::Colorize;
 use const_currying::const_currying;
@@ -12,7 +13,6 @@ use hex_color::HexColor;
 use image::{open, Pixel};
 use indicatif::ProgressBar;
 use mashi_core::Encoder;
-use plotters::prelude::*;
 use rayon::slice::ParallelSliceMut;
 
 fn optimize_math_str(input: String) -> String {
@@ -258,12 +258,12 @@ fn remove_dup_patterns(
 }
 
 fn main() {
-    // let args: Vec<String> = env::args().collect();
-    // if args.contains(&"-d".to_string()) {
-    //     decode(args[1].clone(), args.contains(&"-v".to_string()));
-    // } else {
-    //     let file_path = args[1].to_string();
-    //     let name = Path::new(&file_path).file_name().unwrap().to_str().unwrap().split(".").collect::<Vec<&str>>()[0].to_string();
-    //     convert(&args[1], &(name + ".pcf"), args.contains(&"-v".to_string()));
-    // }
+    let args: Vec<String> = env::args().collect();
+    if args.contains(&"-d".to_string()) {
+        decode(args[1].clone(), args.contains(&"-v".to_string()));
+    } else {
+        let file_path = args[1].to_string();
+        let name = std::path::Path::new(&file_path).file_name().unwrap().to_str().unwrap().split(".").collect::<Vec<&str>>()[0].to_string();
+        convert(&args[1], &(name + ".pcf"), args.contains(&"-v".to_string()));
+    }
 }
