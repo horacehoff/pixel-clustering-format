@@ -259,11 +259,11 @@ fn remove_dup_patterns(
 
 fn main() {
     let args: Vec<String> = env::args().collect();
-    if args.contains(&"-d".to_string()) {
-        decode(args[1].clone(), args.contains(&"-v".to_string()));
+    if args.contains(&"--decode".to_string()) {
+        decode(args[1].clone(), args.contains(&"--verbose".to_string()));
     } else {
         let file_path = args[1].to_string();
         let name = std::path::Path::new(&file_path).file_name().unwrap().to_str().unwrap().split(".").collect::<Vec<&str>>()[0].to_string();
-        convert(&args[1], &(name + ".pcf"), args.contains(&"-v".to_string()));
+        convert(&args[1], &(name + ".pcf"), args.contains(&"--verbose".to_string()));
     }
 }

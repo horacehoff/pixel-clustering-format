@@ -184,7 +184,7 @@ version = "3.0.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "fde0e0ec90c9dfb3b4b1a0891a7dcd0e2bffde2f7efed5fe7c9bb00e5bfb915e"
 dependencies = [
-    "windows-sys",
+ "windows-sys",
 ]
 
 [[package]]
@@ -197,7 +197,7 @@ dependencies = [
  "libc",
  "once_cell",
  "unicode-width",
-    "windows-sys",
+ "windows-sys",
 ]
 
 [[package]]
@@ -426,7 +426,7 @@ dependencies = [
  "byteorder-lite",
  "color_quant",
  "exr",
-    "gif",
+ "gif",
  "image-webp",
  "num-traits",
  "png",
@@ -702,7 +702,7 @@ dependencies = [
  "colored",
  "const-currying",
  "hex_color",
-    "image",
+ "image",
  "indicatif",
  "json",
  "mashi-core",
@@ -721,7 +721,7 @@ version = "0.17.16"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "82151a2fc869e011c153adc57cf2789ccb8d9906ce52c0b39a6b5697749d7526"
 dependencies = [
-    "bitflags",
+ "bitflags",
  "crc32fast",
  "fdeflate",
  "flate2",
@@ -1185,7 +1185,7 @@ version = "0.59.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "1e38bc4d79ed67fd075bcc251a1c39b32a1776bbe92e5bef1f0bf1f8c531853b"
 dependencies = [
-    "windows-targets",
+ "windows-targets",
 ]
 
 [[package]]
@@ -1194,14 +1194,14 @@ version = "0.52.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "9b724f72796e036ab90c1021d4780d4d3d648aca59e491e6b98e725b84e99973"
 dependencies = [
-    "windows_aarch64_gnullvm",
-    "windows_aarch64_msvc",
-    "windows_i686_gnu",
+ "windows_aarch64_gnullvm",
+ "windows_aarch64_msvc",
+ "windows_i686_gnu",
  "windows_i686_gnullvm",
-    "windows_i686_msvc",
-    "windows_x86_64_gnu",
-    "windows_x86_64_gnullvm",
-    "windows_x86_64_msvc",
+ "windows_i686_msvc",
+ "windows_x86_64_gnu",
+ "windows_x86_64_gnullvm",
+ "windows_x86_64_msvc",
 ]
 
 [[package]]
