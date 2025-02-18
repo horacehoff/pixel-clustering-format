@@ -1,7 +1,9 @@
 use rayon::iter::{ParallelBridge, ParallelIterator};
 use std::fs::File;
 use std::io::Write;
+use std::path::Path;
 use std::{env, fs};
+
 mod decode;
 
 use crate::decode::decode;
@@ -276,6 +278,8 @@ fn main() {
     if args.contains(&"-d".to_string()) {
         decode(args[1].clone(), args.contains(&"-v".to_string()));
     } else {
-        convert(&args[1], "fig1.txt", !args.contains(&"-nc".to_string()), args.contains(&"-v".to_string()));
+        let file_path = args[1].to_string();
+        let name = Path::new(&file_path).file_name().unwrap().to_str().unwrap().split(".").collect::<Vec<&str>>()[0].to_string();
+        convert(&args[1], &(name + ".pcf"), !args.contains(&"-nc".to_string()), args.contains(&"-v".to_string()));
     }
 }

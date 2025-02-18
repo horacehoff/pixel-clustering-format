@@ -2,7 +2,7 @@ use colored::Colorize;
 use const_currying::const_currying;
 use image::RgbaImage;
 use indicatif::ProgressBar;
-use lzma_rust::{LZMA2Options, LZMA2Reader};
+use mashi_core::Decoder;
 use rayon::iter::{IntoParallelRefIterator, ParallelIterator};
 use std::fs::File;
 use std::io::Read;
@@ -45,18 +45,10 @@ pub fn decode(path: String,
     let mut contents = vec![];
     input.read_to_end(&mut contents).unwrap();
 
-    let mut options = LZMA2Options::with_preset(9);
-    options.dict_size = LZMA2Options::DICT_SIZE_DEFAULT;
+    let mut decoder = Decoder::new();
+    let decompressed = decoder.decode(&contents);
 
-    let mut decompressed = Vec::new();
-
-    let mut r = LZMA2Reader::new(&contents[..], options.dict_size, None);
-    r.read_to_end(&mut decompressed).unwrap_or_else(|_| {
-        decompressed = contents;
-        0
-    });
-
-    let result = String::from_utf8(decompressed).unwrap();
+    let result = String::from_utf8(decompressed.to_vec()).unwrap();
     let mut colors: Vec<String> = result.split('%').map(|x| x.to_string()).collect();
     let width: u32 = colors.remove(0).parse().unwrap();
     let height: u32 = colors.remove(0).parse().unwrap();
