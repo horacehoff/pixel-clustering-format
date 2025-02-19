@@ -83,7 +83,7 @@ pub fn decode(path: String,
 
     let mut colors: Vec<String> = colors.remove(0).split("#").map(|x| x.to_string()).collect();
     colors.retain(|x| !x.is_empty());
-    println!("Decoding {}...", path.blue());
+    println!("PCF -- Decoding {}...", path.blue());
     let bar = ProgressBar::new(colors.len() as u64);
     for x in colors.iter_mut() {
         let mut is_y = false;

@@ -10,7 +10,7 @@ use ahash::{HashMap, HashMapExt};
 use colored::Colorize;
 use const_currying::const_currying;
 use hex_color::HexColor;
-use image::{open, Pixel};
+use image::{open, Pixel, Rgba, RgbaImage};
 use indicatif::ProgressBar;
 use mashi_core::Encoder;
 use rayon::slice::ParallelSliceMut;
@@ -78,9 +78,6 @@ fn optimize_hex_color(input: String) -> String {
         && indexable[2] == indexable[3]
         && indexable[4] == indexable[5]
     {
-        // output_color.remove(1);
-        // output_color.remove(2);
-        // output_color.remove(4);
         output_color = format!("#{}{}{}", &output_color[1..2], &output_color[3..4], &output_color[5..6])
     }
     if output_color.ends_with("FF") {
@@ -89,12 +86,78 @@ fn optimize_hex_color(input: String) -> String {
     output_color
 }
 
+#[inline]
+fn find_closest_palette_color(pixel: Rgba<u8>, palette: Vec<Rgba<u8>>) -> Rgba<u8> {
+    palette
+        .into_iter()
+        .min_by_key(|p| {
+            let dr = pixel[0] as i32 - p[0] as i32;
+            let dg = pixel[1] as i32 - p[1] as i32;
+            let db = pixel[2] as i32 - p[2] as i32;
+            let da = pixel[3] as i32 - p[3] as i32;
+            dr * dr + dg * dg + db * db + da * da
+        })
+        .unwrap_or(pixel)
+}
+fn get_quant_error_mul(mul: u8, quant_error: (i16, i16, i16, i16)) -> Rgba<u8> {
+    let factor = (mul / 16) as i16;
+    Rgba([(quant_error.0 * factor) as u8, (quant_error.1 * factor) as u8, (quant_error.2 * factor) as u8, (quant_error.3 * factor) as u8])
+}
+
+fn add_colors(x1: Rgba<u8>, x2: Rgba<u8>) -> Rgba<u8> {
+    let old_channels = x1.channels();
+    let new_channels = x2.channels();
+    Rgba([old_channels[0] + new_channels[0], old_channels[1] + new_channels[1], old_channels[2] + new_channels[2], old_channels[3] + new_channels[3]])
+}
+
+pub fn floyd_steinberg_dither(image: &mut RgbaImage, path: String) {
+    let (width, height) = image.dimensions();
+    let colors = image_palette::load_with_maxcolor(&path, 1024).unwrap();
+    let mut palette: Vec<Rgba<u8>> = Vec::new();
+    for item in colors {
+        palette.push(image::Rgba(<[u8; 4]>::from(hex_color::HexColor::parse(item.color()).unwrap().split_rgba())));
+    }
+
+    for y in 0..height {
+        for x in 0..width {
+            let old_pixel = image.get_pixel(x, y).clone();
+            let new_pixel = find_closest_palette_color(old_pixel, palette.clone());
+            image.put_pixel(x, y, new_pixel);
+            let old_channels = old_pixel.channels();
+            let new_channels = new_pixel.channels();
+            let quant_error = (old_channels[0] as i16 - new_channels[0] as i16, old_channels[1] as i16 - new_channels[1] as i16, old_channels[2] as i16 - new_channels[2] as i16, old_channels[3] as i16 - new_channels[3] as i16);
+
+            if x < width - 1 {
+                let value = add_colors(image.get_pixel(x + 1, y).clone(), get_quant_error_mul(7, quant_error));
+                image.put_pixel(x + 1, y, value);
+            }
+
+            if x > 0 && y < height - 1 {
+                let value = add_colors(image.get_pixel(x - 1, y + 1).clone(), get_quant_error_mul(3, quant_error));
+                image.put_pixel(x - 1, y + 1, value);
+            }
+
+            if y < height - 1 {
+                let value = add_colors(image.get_pixel(x, y + 1).clone(), get_quant_error_mul(5, quant_error));
+                image.put_pixel(x, y + 1, value);
+            }
+
+            if x < width - 1 && y < height - 1 {
+                let value = add_colors(image.get_pixel(x + 1, y + 1).clone(), get_quant_error_mul(1, quant_error));
+                image.put_pixel(x + 1, y + 1, value);
+            }
+        }
+    }
+}
+
 #[const_currying]
 fn convert(path: &str,
            output_file: &str,
            #[maybe_const(dispatch = verbose, consts = [true, false])]verbose: bool) {
-    println!("Converting {}", path.blue());
-    let image = open(path).unwrap().into_rgba8();
+    println!("PCF -- Converting {}", path.blue());
+    let mut image = open(path).unwrap().into_rgba8();
+    //floyd_steinberg_dither(&mut image, path.to_string());
+    //image.save("output.png").unwrap();
     let width: u32 = image.width();
     let height: u32 = image.height();
     let mut x = 0;
@@ -104,7 +167,8 @@ fn convert(path: &str,
     // put the pixels in a hashmap
     let bar = ProgressBar::new(image.pixels().len() as u64);
     let mut px_colors: HashMap<String, Vec<(u32, u32)>> = Default::default();
-    for w in image.pixels() {
+    let pixels = image.pixels();
+    for w in pixels {
         let colors = w.channels();
         let color = optimize_hex_color(HexColor::rgba(colors[0], colors[1], colors[2], colors[3])
             .display_rgba().to_string());
