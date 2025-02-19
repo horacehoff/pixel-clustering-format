@@ -176,10 +176,8 @@ fn convert(path: &str,
             bar.inc(1);
         }
     }
-    let mut compressed = outputf;
 
-    compressed = remove_dup_patterns(compressed, 2, 4, verbose);
-
+    let compressed = remove_dup_patterns(outputf, 2, 4, verbose);;
 
     let mut file = File::create(output_file).unwrap();
     let mut encoder = Encoder::new();
