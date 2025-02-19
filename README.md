@@ -1,40 +1,36 @@
-# Pixel-Clustering Image Format (.PCF)
+# Pixel-Clustering Format (.PCF)
 ### About
-PCF is an image format that works by grouping pixels together in clusters that rely on simple additions and multiplications for compression, and grouping them by color.
+PCF is a lossless image format that compresses images by clustering pixels of the same color, using simple arithmetic operations like addition and multiplication. It achieves high compression rates by eliminating redundant color information and efficiently encoding pixel positions.
 
 ### How
-It uses "layers" to store pixels, that is it completely disregards the pixels of the dominant color in the image, using it as a "background". Then, it fills in the image using the other colors, thus allowing for a very efficient lossless compression. 
+PCF organizes images into layers, and completely disregards the pixels of the dominant color, which is treated as a background color.
+Here is how PCF works:
+1. **Basic clustering**\
+A simple 1×5 black image:\
+*Standard representation*: `[(0,0), (0,1), (0,2), (0,3), (0,4)]`\
+*PCF representation*: `0:[0,1,2,3,4]` (factoring out the redundant x-coordinate / y-coordinate).
+2. **Second clustering step**\
+A 5x5 black image:\
+*Previous method*: `0:[0,1,2,3,4], 1:[0,1,2,3,4], 2:[0,1,2,3,4], 3:[0,1,2,3,4], 4:[0,1,2,3,4]`\
+*PCF representation*: `[0,1,2,3,4]:[0,1,2,3,4]` (grouping repeated structures
+3. **Transforming lists into additions**\
+*Previous representation*: `[0,1,2,3,4]:[0,1,2,3,4]`\
+*PCF representation*: `0+1+1+1+1:0+1+1+1+1`
+4. **Transforming repeated additions into multiplications**\
+*Previous representation*: `0+1+1+1+1:0+1+1+1+1`\
+*PCF representation*: `0+1*4:0+1*4`
+5. **Optimizing repeated patterns**\
+*Previous representation*: `0+1*4:0+1*4`\
+*PCF representation*: `a:a` + appends `$0+1*4$a` at the end of the file
 
-1. For example, imagine a black 1*5 image. You could theoretically represent all the pixels inside of this image as a list of tuples (x,y) : `[(0,0), (0,1), (0,2), (0,3), (0,4)]`. But then, this isn't very efficient: we just wrote the same abscissa five times in a row. What if we could save space by factoring them by their abscissa (or ordinate) ? That's exactly what LPI does, by representing the same pixels like this: `0:[0,1,2,3,4]`. Now that's more compact. 
-2. But what if our image is bigger ? For example, let's say our image is 5x5:\
-`
-[(0,0), (0,1), (0,2), (0,3), (0,4),
-(1,0), (1,1), (1,2), (1,3), (1,4),
-(2,0), (2,1), (2,2), (2,3), (2,4),
-(3,0), (3,1), (3,2), (3,3), (3,4),
-(4,0), (4,1), (4,2), (4,3), (4,4)]
-`\
-In that case, our previous method gives us this:\
-`0:[0,1,2,3,4], 1:[0,1,2,3,4], 2:[0,1,2,3,4], 3:[0,1,2[README.md](README.md),3,4], 4:[0,1,2,3,4]`\
-Which isn't great space-wise. However, there's a way to make it more compact. We have the same list five times in row, thus we basically re-use the previous method, which returns this:
-`[0,1,2,3,4]:[0,1,2,3,4]`\
-That's better!
-3. But then, same as last time, this becomes very inefficient for bigger images. Let's consider a black image of size (x,x) with x>10. With our previous method, we get this:
-`[0,1,2,3,4,...,x-1]:[0,1,2,3,4,...,x-1]`. The bigger x gets, the more wasteful this is. With x=10000, the end of each list would look like this:`..., 9998, 9999`.\
-The answer lies in sums. Instead of writing all those big numbers, we can write, "0+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1......", each addition representing a number. Of course, this works even if the numbers are not evenly spaced apart (e.g. you could have "0+1+10+2+4+5+1+99").
-4. However, that's not super compact. Why write the same addition 9999 times in a row ? This is the last step. LPI simply writes "0+1\*9999". This also works with different numbers, like: "0+1\*932+2\*34+1+7+4+56+3\*23"
-
-This works great, but less so for images which contain thousands and thousands of colors and not many pixels per color, as PCF's method is given less "space" to work properly.
-
-### More info
-On images where it works best, PCF offers a great compression level, sometimes being as much as 99% smaller than the original PNG image. However, it poorly compresses colors and their relation with pixels and as such, works best with images that don't have a ton of colors and/or that have a high pixel/color ratio. Examples below (the images in the .PCF format are 47% to 62% smaller than their heavily optimized PNG original counterparts).
-
-PCF supports transparency, and first reads colors in the RGBA format and then stores them in the hexadecimal format.
+### Performance & Limitations
+PCF excels in images with a high pixel-to-color ratio, achieving compression rates up to 99% smaller than PNG. However, it struggles with images containing many distinct colors, where clustering is less effective.
+PCF supports transparency.
 
 ## Installation
 
 ```bash
-git clone https://github.com/just-a-mango/pixel-clustering-image-format
+git clone https://github.com/horacehoff/pixel-clustering-format
 ```
 
 ## Usage
