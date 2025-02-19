@@ -73,17 +73,18 @@ fn group_by_key(input: HashMap<String, String>) -> HashMap<String, String> {
 
 fn optimize_hex_color(input: String) -> String {
     let mut output_color: String = input;
-    let indexable: Vec<char> = output_color.chars().collect();
+    let indexable = output_color.as_bytes();
     if indexable[0] == indexable[1]
         && indexable[2] == indexable[3]
         && indexable[4] == indexable[5]
     {
-        output_color.remove(1);
-        output_color.remove(2);
-        output_color.remove(4);
+        // output_color.remove(1);
+        // output_color.remove(2);
+        // output_color.remove(4);
+        output_color = format!("#{}{}{}", &output_color[1..2], &output_color[3..4], &output_color[5..6])
     }
     if output_color.ends_with("FF") {
-        output_color = output_color.strip_suffix("FF").unwrap().to_string();
+        output_color.truncate(output_color.len() - 2)
     }
     output_color
 }
