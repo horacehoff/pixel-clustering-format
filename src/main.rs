@@ -88,10 +88,12 @@ fn optimize_hex_color(input: String) -> String {
 
 #[inline]
 fn find_closest_palette_color(pixel: Rgba<u8>, palette: Vec<Rgba<u8>>, image: &RgbaImage, x: u32, y: u32, width: u32, height: u32) -> Rgba<u8> {
-    let base_radius: bool = false;
-    let extra_radius: bool = true;
-    let extra_extra_radius: bool = false;
-    let diagonal_pixels: bool = false;
+    let mut base_radius: bool = true;
+    let mut extra_radius: bool = true;
+    let mut extra_extra_radius: bool = false;
+    let mut diagonal_pixels: bool = false;
+
+    let quality_index = 0;
 
     let mut pixels = Vec::new();
     if x > 0 && y > 0 && diagonal_pixels {

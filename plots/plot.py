@@ -20,7 +20,7 @@ names_split = split_list(names_, 10)
 chunkindex = 0
 for (originals, transformed, names) in zip(originals_split, transformed_split, names_split):
     chunkindex += 1
-    barWidth = 1
+    barWidth = 0.5
     png_bar = []
     pcf_bar = []
     png_pcf_bar = []
@@ -34,9 +34,9 @@ for (originals, transformed, names) in zip(originals_split, transformed_split, n
     pcf_bar_pos = []
     for i in range(len(originals+transformed)):
         if (i % 2) == 0:
-            png_bar_pos.append(i+1)
+            png_bar_pos.append(i+0.5)
         else:
-            pcf_bar_pos.append(i+1)
+            pcf_bar_pos.append(i+0.5)
 
     all_bar_pos = range(len(originals+transformed))
 
@@ -68,7 +68,7 @@ for (originals, transformed, names) in zip(originals_split, transformed_split, n
             label.append(transformed[x] / 1000)
 
     for i in range(len(all_bar_pos)):
-        plt.text(x=all_bar_pos[i] + 0.5, y=png_pcf_bar[i] + 0.1, s=label[i], size=6)
+        plt.text(x=all_bar_pos[i] + 0.2, y=png_pcf_bar[i] + 0.5, s=label[i], size=6)
 
     plt.savefig("fig"+str(chunkindex)+".png", dpi=1000, pad_inches=0, bbox_inches="tight")
     plt.clf()
