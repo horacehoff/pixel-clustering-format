@@ -46,7 +46,8 @@ pub fn decode(path: String,
 
     let mut result = String::new();
 
-    let test = String::from_utf8(contents.clone()).unwrap();
+    //  check if contents is compressed
+    let test = String::from_utf8(contents.clone()).unwrap_or(String::from(""));
     if test.contains("%") && test.contains("#") {
         result = test;
     } else {

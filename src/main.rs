@@ -105,15 +105,9 @@ fn convert(path: &str,
     let mut px_colors: HashMap<String, Vec<(u32, u32)>> = Default::default();
     for w in image.pixels() {
         let colors = w.channels();
-        let mut color = HexColor::rgba(colors[0], colors[1], colors[2], colors[3])
-            .display_rgba()
-            .to_string();
-        color = optimize_hex_color(color);
-        if !px_colors.contains_key(&color) {
-            px_colors.insert(color, vec![(x, y)]);
-        } else {
-            px_colors.get_mut(&color).unwrap().push((x, y));
-        }
+        let color = optimize_hex_color(HexColor::rgba(colors[0], colors[1], colors[2], colors[3])
+            .display_rgba().to_string());
+        px_colors.entry(color).or_default().push((x, y));
         // if at EOL, go to start of next line
         if x == width - 1 {
             x = 0;
@@ -126,14 +120,7 @@ fn convert(path: &str,
         }
     }
     // remove dominant color
-    let mut bg_color: String = String::new();
-    let mut count: usize = 0;
-    for x in px_colors.keys() {
-        if px_colors[x].len() > count {
-            count = px_colors[x].len();
-            bg_color = x.to_string();
-        }
-    }
+    let bg_color = px_colors.iter().max_by_key(|(x, y)| y.len()).unwrap().0.to_string();
     px_colors.remove(&bg_color);
 
     let mut outputf: String = format!("{width}%{height}%{bg_color}%");
