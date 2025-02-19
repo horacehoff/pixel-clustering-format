@@ -2,6 +2,9 @@
 ### About
 PCF is a lossless image format that compresses images by clustering pixels of the same color, using simple arithmetic operations like addition and multiplication. It achieves high compression rates by eliminating redundant color information and efficiently encoding pixel positions.
 
+PCF **can** be lossy when using the `--lossy` flag, which applies Floyd-Steinberg dithering to the image. This feature
+is a WIP.
+
 ### How
 PCF organizes images into layers, and completely disregards the pixels of the dominant color, which is treated as a background color.
 Here is how PCF works:

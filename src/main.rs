@@ -112,7 +112,8 @@ fn add_colors(x1: Rgba<u8>, x2: Rgba<u8>) -> Rgba<u8> {
 
 pub fn floyd_steinberg_dither(image: &mut RgbaImage, path: String) {
     let (width, height) = image.dimensions();
-    let colors = image_palette::load_with_maxcolor(&path, 1024).unwrap();
+    let max = image_palette::load(&path).unwrap().len();
+    let colors = image_palette::load_with_maxcolor(&path, 256).unwrap();
     let mut palette: Vec<Rgba<u8>> = Vec::new();
     for item in colors {
         palette.push(image::Rgba(<[u8; 4]>::from(hex_color::HexColor::parse(item.color()).unwrap().split_rgba())));
@@ -153,11 +154,14 @@ pub fn floyd_steinberg_dither(image: &mut RgbaImage, path: String) {
 #[const_currying]
 fn convert(path: &str,
            output_file: &str,
-           #[maybe_const(dispatch = verbose, consts = [true, false])]verbose: bool) {
+           #[maybe_const(dispatch = verbose, consts = [true, false])]verbose: bool,
+           lossy: bool
+) {
     println!("PCF -- Converting {}", path.blue());
     let mut image = open(path).unwrap().into_rgba8();
-    //floyd_steinberg_dither(&mut image, path.to_string());
-    //image.save("output.png").unwrap();
+    if lossy {
+        floyd_steinberg_dither(&mut image, path.to_string());
+    }
     let width: u32 = image.width();
     let height: u32 = image.height();
     let mut x = 0;
@@ -320,6 +324,6 @@ fn main() {
     } else {
         let file_path = args[1].to_string();
         let name = std::path::Path::new(&file_path).file_name().unwrap().to_str().unwrap().split(".").collect::<Vec<&str>>()[0].to_string();
-        convert(&args[1], &(name + ".pcf"), args.contains(&"--verbose".to_string()));
+        convert(&args[1], &(name + ".pcf"), args.contains(&"--verbose".to_string()), args.contains(&"--lossy".to_string()));
     }
 }
