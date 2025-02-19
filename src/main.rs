@@ -71,6 +71,23 @@ fn group_by_key(input: HashMap<String, String>) -> HashMap<String, String> {
     vec_to_math(new)
 }
 
+fn optimize_hex_color(input: String) -> String {
+    let mut output_color: String = input;
+    let indexable: Vec<char> = output_color.chars().collect();
+    if indexable[0] == indexable[1]
+        && indexable[2] == indexable[3]
+        && indexable[4] == indexable[5]
+    {
+        output_color.remove(1);
+        output_color.remove(2);
+        output_color.remove(4);
+    }
+    if output_color.ends_with("FF") {
+        output_color = output_color.strip_suffix("FF").unwrap().to_string();
+    }
+    output_color
+}
+
 #[const_currying]
 fn convert(path: &str,
            output_file: &str,
@@ -87,22 +104,11 @@ fn convert(path: &str,
     let bar = ProgressBar::new(image.pixels().len() as u64);
     let mut px_colors: HashMap<String, Vec<(u32, u32)>> = Default::default();
     for w in image.pixels() {
-        let colors = w.channels().to_vec();
+        let colors = w.channels();
         let mut color = HexColor::rgba(colors[0], colors[1], colors[2], colors[3])
             .display_rgba()
             .to_string();
-        let indexable: Vec<char> = color.chars().collect();
-        if indexable[0] == indexable[1]
-            && indexable[2] == indexable[3]
-            && indexable[4] == indexable[5]
-        {
-            color.remove(1);
-            color.remove(2);
-            color.remove(4);
-        }
-        if color.ends_with("FF") {
-            color = color.strip_suffix("FF").unwrap().to_string();
-        }
+        color = optimize_hex_color(color);
         if !px_colors.contains_key(&color) {
             px_colors.insert(color, vec![(x, y)]);
         } else {
