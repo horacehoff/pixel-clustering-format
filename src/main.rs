@@ -87,7 +87,62 @@ fn optimize_hex_color(input: String) -> String {
 }
 
 #[inline]
-fn find_closest_palette_color(pixel: Rgba<u8>, palette: Vec<Rgba<u8>>) -> Rgba<u8> {
+fn find_closest_palette_color(pixel: Rgba<u8>, palette: Vec<Rgba<u8>>, image: &RgbaImage, x: u32, y: u32, width: u32, height: u32) -> Rgba<u8> {
+    let extra_radius: bool = true;
+    let diagonal_pixels: bool = false;
+    let mut pixels = Vec::new();
+    if x > 0 && y > 0 && diagonal_pixels {
+        pixels.push((x - 1, y - 1));
+    }
+    if x > 1 && y > 1 && extra_radius && diagonal_pixels {
+        pixels.push((x - 2, y - 2));
+    }
+    if x > 0 {
+        pixels.push((x - 1, y));
+    }
+    if x > 1 && extra_radius {
+        pixels.push((x - 2, y));
+    }
+    if x < width - 1 && y < height - 1 && diagonal_pixels {
+        pixels.push((x + 1, y + 1));
+    }
+    if x < width - 2 && y < height - 2 && extra_radius && diagonal_pixels {
+        pixels.push((x + 2, y + 2));
+    }
+    if y > 0 {
+        pixels.push((x, y - 1));
+    }
+    if y > 1 && extra_radius {
+        pixels.push((x, y - 2));
+    }
+    if x < width - 1 {
+        pixels.push((x + 1, y));
+    }
+    if x < width - 2 && extra_radius {
+        pixels.push((x + 2, y));
+    }
+    if y < height - 1 {
+        pixels.push((x, y + 1));
+    }
+    if y < height - 2 && extra_radius {
+        pixels.push((x, y + 2));
+    }
+    if x < width - 1 && y > 0 && diagonal_pixels {
+        pixels.push((x + 1, y - 1));
+    }
+    if x < width - 2 && y > 1 && extra_radius && diagonal_pixels {
+        pixels.push((x + 2, y - 2));
+    }
+    if x > 0 && y < height - 1 && diagonal_pixels {
+        pixels.push((x - 1, y + 1));
+    }
+    if x > 1 && y < height - 2 && extra_radius && diagonal_pixels {
+        pixels.push((x - 2, y + 2));
+    }
+    let mut palette = Vec::new();
+    for x in pixels {
+        palette.push(image.get_pixel(x.0, x.1));
+    }
     palette
         .into_iter()
         .min_by_key(|p| {
@@ -97,7 +152,7 @@ fn find_closest_palette_color(pixel: Rgba<u8>, palette: Vec<Rgba<u8>>) -> Rgba<u
             let da = pixel[3] as i32 - p[3] as i32;
             dr * dr + dg * dg + db * db + da * da
         })
-        .unwrap_or(pixel)
+        .unwrap_or(&pixel).clone()
 }
 fn get_quant_error_mul(mul: u8, quant_error: (i16, i16, i16, i16)) -> Rgba<u8> {
     let factor = (mul / 16) as i16;
@@ -122,7 +177,7 @@ pub fn floyd_steinberg_dither(image: &mut RgbaImage, path: String) {
     for y in 0..height {
         for x in 0..width {
             let old_pixel = image.get_pixel(x, y).clone();
-            let new_pixel = find_closest_palette_color(old_pixel, palette.clone());
+            let new_pixel = find_closest_palette_color(old_pixel, palette.clone(), image, x, y, width, height);
             image.put_pixel(x, y, new_pixel);
             let old_channels = old_pixel.channels();
             let new_channels = new_pixel.channels();
@@ -161,6 +216,7 @@ fn convert(path: &str,
     let mut image = open(path).unwrap().into_rgba8();
     if lossy {
         floyd_steinberg_dither(&mut image, path.to_string());
+        image.save("out.png").unwrap();
     }
     let width: u32 = image.width();
     let height: u32 = image.height();

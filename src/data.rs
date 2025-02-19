@@ -14,7 +14,7 @@ pub fn compare() -> (Vec<String>, Vec<usize>, Vec<usize>) {
         }
         name.push(entry.path().file_name().unwrap().to_str().unwrap().to_string());
         original.push(fs::metadata(entry.path()).unwrap().len() as usize);
-        convert(entry.path().to_str().unwrap(), "test.pcf", false);
+        convert(entry.path().to_str().unwrap(), "test.pcf", false, false);
         compressed.push(fs::metadata("test.pcf").unwrap().len() as usize);
         println!("{:?}", entry.path().file_name().unwrap());
     }
