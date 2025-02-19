@@ -88,8 +88,11 @@ fn optimize_hex_color(input: String) -> String {
 
 #[inline]
 fn find_closest_palette_color(pixel: Rgba<u8>, palette: Vec<Rgba<u8>>, image: &RgbaImage, x: u32, y: u32, width: u32, height: u32) -> Rgba<u8> {
+    let base_radius: bool = false;
     let extra_radius: bool = true;
+    let extra_extra_radius: bool = false;
     let diagonal_pixels: bool = false;
+
     let mut pixels = Vec::new();
     if x > 0 && y > 0 && diagonal_pixels {
         pixels.push((x - 1, y - 1));
@@ -97,11 +100,14 @@ fn find_closest_palette_color(pixel: Rgba<u8>, palette: Vec<Rgba<u8>>, image: &R
     if x > 1 && y > 1 && extra_radius && diagonal_pixels {
         pixels.push((x - 2, y - 2));
     }
-    if x > 0 {
+    if x > 0 && base_radius {
         pixels.push((x - 1, y));
     }
     if x > 1 && extra_radius {
         pixels.push((x - 2, y));
+    }
+    if x > 2 && extra_extra_radius {
+        pixels.push((x - 3, y));
     }
     if x < width - 1 && y < height - 1 && diagonal_pixels {
         pixels.push((x + 1, y + 1));
@@ -109,23 +115,32 @@ fn find_closest_palette_color(pixel: Rgba<u8>, palette: Vec<Rgba<u8>>, image: &R
     if x < width - 2 && y < height - 2 && extra_radius && diagonal_pixels {
         pixels.push((x + 2, y + 2));
     }
-    if y > 0 {
+    if y > 0 && base_radius {
         pixels.push((x, y - 1));
     }
     if y > 1 && extra_radius {
         pixels.push((x, y - 2));
     }
-    if x < width - 1 {
+    if y > 2 && extra_extra_radius {
+        pixels.push((x, y - 3));
+    }
+    if x < width - 1 && base_radius {
         pixels.push((x + 1, y));
     }
     if x < width - 2 && extra_radius {
         pixels.push((x + 2, y));
     }
-    if y < height - 1 {
+    if x < width - 3 && extra_extra_radius {
+        pixels.push((x + 3, y));
+    }
+    if y < height - 1 && base_radius {
         pixels.push((x, y + 1));
     }
     if y < height - 2 && extra_radius {
         pixels.push((x, y + 2));
+    }
+    if y < height - 3 && extra_extra_radius {
+        pixels.push((x, y + 3));
     }
     if x < width - 1 && y > 0 && diagonal_pixels {
         pixels.push((x + 1, y - 1));
