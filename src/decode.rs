@@ -39,8 +39,10 @@ pub fn math_to_vec(s: String) -> Vec<String> {
 
 #[const_currying]
 pub fn decode(path: String,
+              output_file: String,
               #[maybe_const(dispatch = verbose, consts = [true, false])]verbose: bool) {
-    let mut input = File::open(path.clone()).unwrap();
+    println!("PCF -- Decoding {}...", path.blue());
+    let mut input = File::open(path).unwrap();
     let mut contents = vec![];
     input.read_to_end(&mut contents).unwrap();
 
@@ -83,7 +85,6 @@ pub fn decode(path: String,
 
     let mut colors: Vec<String> = colors.remove(0).split("#").map(|x| x.to_string()).collect();
     colors.retain(|x| !x.is_empty());
-    println!("PCF -- Decoding {}...", path.blue());
     let bar = ProgressBar::new(colors.len() as u64);
     for x in colors.iter_mut() {
         let mut is_y = false;
@@ -136,8 +137,7 @@ pub fn decode(path: String,
         }
     }
 
-    let output_file = "test.png";
-    output.save(output_file).unwrap();
+    output.save(output_file.to_string()).unwrap();
     println!("Saved to {}.", output_file.blue());
 
 }
