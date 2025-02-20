@@ -13,7 +13,6 @@ indicatif = "0.17.9"
 json = "0.12.4"
 rayon = "1.10.0"
 mashi-core = "0.1.0"
-image-palette = "0.1.1"
 crossterm = "0.28.1"
 rfd = "0.15.2"
 

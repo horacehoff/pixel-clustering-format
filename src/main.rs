@@ -94,7 +94,7 @@ fn optimize_hex_color(input: String) -> String {
 }
 
 #[inline]
-fn find_closest_palette_color(pixel: Rgba<u8>, palette: Vec<Rgba<u8>>, image: &RgbaImage, x: u32, y: u32, width: u32, height: u32) -> Rgba<u8> {
+fn find_closest_palette_color(pixel: Rgba<u8>, image: &RgbaImage, x: u32, y: u32, width: u32, height: u32) -> Rgba<u8> {
     let mut base_radius: bool = false;
     let mut extra_radius: bool = true;
     let mut extra_extra_radius: bool = false;
@@ -189,17 +189,11 @@ fn add_colors(x1: Rgba<u8>, x2: Rgba<u8>) -> Rgba<u8> {
 
 pub fn floyd_steinberg_dither(image: &mut RgbaImage, path: String) {
     let (width, height) = image.dimensions();
-    let max = image_palette::load(&path).unwrap().len();
-    let colors = image_palette::load_with_maxcolor(&path, 256).unwrap();
-    let mut palette: Vec<Rgba<u8>> = Vec::new();
-    for item in colors {
-        palette.push(image::Rgba(<[u8; 4]>::from(hex_color::HexColor::parse(item.color()).unwrap().split_rgba())));
-    }
 
     for y in 0..height {
         for x in 0..width {
             let old_pixel = *image.get_pixel(x, y);
-            let new_pixel = find_closest_palette_color(old_pixel, palette.clone(), image, x, y, width, height);
+            let new_pixel = find_closest_palette_color(old_pixel, image, x, y, width, height);
             image.put_pixel(x, y, new_pixel);
             let old_channels = old_pixel.channels();
             let new_channels = new_pixel.channels();

@@ -1039,15 +1039,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "image-palette"
-version = "0.1.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "61fb51fd221e53403b58e3bc850df97cfa729e49ad24aa4bea7bdad0a073e146"
-dependencies = [
- "image",
-]
-
-[[package]]
 name = "image-webp"
 version = "0.2.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1517,7 +1508,6 @@ dependencies = [
  "crossterm",
  "hex_color",
  "image",
- "image-palette",
  "indicatif",
  "json",
  "mashi-core",
