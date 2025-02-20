@@ -9,22 +9,16 @@ mod data;
 
 use crate::decode::decode;
 use ahash::{HashMap, HashMapExt};
-use colored::{Color, Colorize};
+use colored::{Colorize};
 use const_currying::const_currying;
-use crossterm::{event, execute};
-use crossterm::event::{poll, read, EnableFocusChange, EnableMouseCapture, Event, KeyCode};
-use crossterm::style::{Print, Stylize};
+use crossterm::{execute};
+use crossterm::event::{poll, read, Event, KeyCode};
+use crossterm::style::{Stylize};
 use crossterm::terminal::{disable_raw_mode, ClearType};
-// use floem::IntoView;
-// use floem::prelude::{button, h_stack, label, text, v_stack, Decorators, RwSignal};
 use hex_color::HexColor;
 use image::{open, Pixel, Rgba, RgbaImage};
 use indicatif::ProgressBar;
 use mashi_core::Encoder;
-// use ratatui::Frame;
-// use ratatui::layout::{Alignment, Offset, Rect};
-// use ratatui::prelude::{Margin, Style, Stylize, Text};
-// use ratatui::widgets::{Block, Paragraph, Wrap};
 use rayon::slice::ParallelSliceMut;
 use rfd::FileDialog;
 
@@ -171,7 +165,7 @@ fn find_closest_palette_color(pixel: Rgba<u8>, palette: Vec<Rgba<u8>>, image: &R
     for x in pixels {
         palette.push(image.get_pixel(x.0, x.1));
     }
-    palette
+    *palette
         .into_iter()
         .min_by_key(|p| {
             let dr = pixel[0] as i32 - p[0] as i32;
@@ -180,7 +174,7 @@ fn find_closest_palette_color(pixel: Rgba<u8>, palette: Vec<Rgba<u8>>, image: &R
             let da = pixel[3] as i32 - p[3] as i32;
             dr * dr + dg * dg + db * db + da * da
         })
-        .unwrap_or(&pixel).clone()
+        .unwrap_or(&pixel)
 }
 fn get_quant_error_mul(mul: u8, quant_error: (i16, i16, i16, i16)) -> Rgba<u8> {
     let factor = (mul / 16) as i16;
@@ -204,7 +198,7 @@ pub fn floyd_steinberg_dither(image: &mut RgbaImage, path: String) {
 
     for y in 0..height {
         for x in 0..width {
-            let old_pixel = image.get_pixel(x, y).clone();
+            let old_pixel = *image.get_pixel(x, y);
             let new_pixel = find_closest_palette_color(old_pixel, palette.clone(), image, x, y, width, height);
             image.put_pixel(x, y, new_pixel);
             let old_channels = old_pixel.channels();
@@ -212,22 +206,22 @@ pub fn floyd_steinberg_dither(image: &mut RgbaImage, path: String) {
             let quant_error = (old_channels[0] as i16 - new_channels[0] as i16, old_channels[1] as i16 - new_channels[1] as i16, old_channels[2] as i16 - new_channels[2] as i16, old_channels[3] as i16 - new_channels[3] as i16);
 
             if x < width - 1 {
-                let value = add_colors(image.get_pixel(x + 1, y).clone(), get_quant_error_mul(7, quant_error));
+                let value = add_colors(*image.get_pixel(x + 1, y), get_quant_error_mul(7, quant_error));
                 image.put_pixel(x + 1, y, value);
             }
 
             if x > 0 && y < height - 1 {
-                let value = add_colors(image.get_pixel(x - 1, y + 1).clone(), get_quant_error_mul(3, quant_error));
+                let value = add_colors(*image.get_pixel(x - 1, y + 1), get_quant_error_mul(3, quant_error));
                 image.put_pixel(x - 1, y + 1, value);
             }
 
             if y < height - 1 {
-                let value = add_colors(image.get_pixel(x, y + 1).clone(), get_quant_error_mul(5, quant_error));
+                let value = add_colors(*image.get_pixel(x, y + 1), get_quant_error_mul(5, quant_error));
                 image.put_pixel(x, y + 1, value);
             }
 
             if x < width - 1 && y < height - 1 {
-                let value = add_colors(image.get_pixel(x + 1, y + 1).clone(), get_quant_error_mul(1, quant_error));
+                let value = add_colors(*image.get_pixel(x + 1, y + 1), get_quant_error_mul(1, quant_error));
                 image.put_pixel(x + 1, y + 1, value);
             }
         }
@@ -437,11 +431,7 @@ fn display_menu(left: bool, right: bool,  enter: bool, mode: &mut u8, sel: &mut 
             *mode = 1;
         }
     } else if *mode == 1 && enter && *sel == 1 {
-        if *selected_lossy == true {
-            *selected_lossy = false;
-        } else {
-            *selected_lossy = true;
-        }
+        *selected_lossy = *selected_lossy != true;
     } else if (*mode == 1 || *mode == 2) && enter && *sel == 0 {
         *selected_file_path = FileDialog::new().pick_file().unwrap().to_str().unwrap().to_string();
     } else if *mode == 1 && enter && *sel == 2 {
@@ -488,21 +478,18 @@ fn main() {
         display_menu(false, false,false, &mut mode, &mut sel, &mut selected_lossy, &mut selected_file_path);
         loop {
             if poll(Duration::from_millis(100)).unwrap() {
-                match read().unwrap() {
-                    Event::Key(event) => {
-                        if event.code == KeyCode::Left {
-                            display_menu(true,false,false, &mut mode, &mut sel, &mut selected_lossy, &mut selected_file_path);
-                        } else if event.code == KeyCode::Right {
-                            display_menu(false,true,false, &mut mode, &mut sel, &mut selected_lossy, &mut selected_file_path);
-                        } else if event.code == KeyCode::Enter {
-                            display_menu(false,false,true, &mut mode, &mut sel, &mut selected_lossy, &mut selected_file_path);
-                        }
-                        else if event.code == KeyCode::Esc || event.code == KeyCode::Char('q') {
-                            disable_raw_mode().unwrap();
-                            return;
-                        }
+                if let Event::Key(event) = read().unwrap() {
+                    if event.code == KeyCode::Left {
+                        display_menu(true,false,false, &mut mode, &mut sel, &mut selected_lossy, &mut selected_file_path);
+                    } else if event.code == KeyCode::Right {
+                        display_menu(false,true,false, &mut mode, &mut sel, &mut selected_lossy, &mut selected_file_path);
+                    } else if event.code == KeyCode::Enter {
+                        display_menu(false,false,true, &mut mode, &mut sel, &mut selected_lossy, &mut selected_file_path);
                     }
-                    _ => {}
+                    else if event.code == KeyCode::Esc || event.code == KeyCode::Char('q') {
+                        disable_raw_mode().unwrap();
+                        return;
+                    }
                 }
             }
         }
