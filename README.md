@@ -87,8 +87,3 @@ cargo run --release -- [filename] [--verbose] [--decode]
 ### PCF:
 
 156 kB (30% smaller)
-
-
-## License
-
-[MIT License](LICENSE)
