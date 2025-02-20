@@ -14,10 +14,8 @@ json = "0.12.4"
 rayon = "1.10.0"
 mashi-core = "0.1.0"
 image-palette = "0.1.1"
-cushy = "0.4.0"
-#floem = "0.2.0"
-ratatui = "0.29.0"
 crossterm = "0.28.1"
+rfd = "0.15.2"
 
 [profile.release]
 opt-level = 3

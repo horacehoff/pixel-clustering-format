@@ -1,6 +1,8 @@
 use std::fs::File;
-use std::io::Write;
+use std::io::{stdout, Write};
 use std::{env, fs};
+use std::process::exit;
+use std::time::Duration;
 
 mod decode;
 mod data;
@@ -9,20 +11,22 @@ use crate::decode::decode;
 use ahash::{HashMap, HashMapExt};
 use colored::{Color, Colorize};
 use const_currying::const_currying;
-use crossterm::event;
-use crossterm::event::Event;
-use cushy::styles::Weight;
+use crossterm::{event, execute};
+use crossterm::event::{poll, read, EnableFocusChange, EnableMouseCapture, Event, KeyCode};
+use crossterm::style::{Print, Stylize};
+use crossterm::terminal::{disable_raw_mode, ClearType};
 // use floem::IntoView;
 // use floem::prelude::{button, h_stack, label, text, v_stack, Decorators, RwSignal};
 use hex_color::HexColor;
 use image::{open, Pixel, Rgba, RgbaImage};
 use indicatif::ProgressBar;
 use mashi_core::Encoder;
-use ratatui::Frame;
-use ratatui::layout::{Alignment, Offset, Rect};
-use ratatui::prelude::{Margin, Style, Stylize, Text};
-use ratatui::widgets::{Block, Paragraph, Wrap};
+// use ratatui::Frame;
+// use ratatui::layout::{Alignment, Offset, Rect};
+// use ratatui::prelude::{Margin, Style, Stylize, Text};
+// use ratatui::widgets::{Block, Paragraph, Wrap};
 use rayon::slice::ParallelSliceMut;
+use rfd::FileDialog;
 
 fn optimize_math_str(input: String) -> String {
     let mut nums: Vec<&str> = input.split('+').filter(|s| !s.is_empty()).collect();
@@ -397,10 +401,107 @@ fn remove_dup_patterns(
     output
 }
 
+fn display_menu(left: bool, right: bool,  enter: bool, mode: &mut u8, sel: &mut u8, selected_lossy: &mut bool, selected_file_path: &mut String) {
+    execute!(stdout(),crossterm::terminal::SetSize(80,20),crossterm::terminal::Clear(ClearType::All)).unwrap();
+    disable_raw_mode().unwrap();
+
+
+    if (*mode == 0 || *mode == 2) && left {
+        *sel = 0;
+    }
+    if (*mode == 0 || *mode == 2) && right {
+        *sel = 1;
+    }
+
+
+    if *mode == 1 && left {
+        if *sel > 0 {
+            *sel -= 1;
+        } else {
+            *sel = 0;
+        }
+    }
+    if *mode == 1 && right {
+        if *sel < 2 {
+            *sel += 1;
+        } else {
+            *sel = 2;
+        }
+    }
+
+
+    if *mode == 0 && enter {
+        if *sel == 1 {
+            *mode = 2;
+        } else {
+            *mode = 1;
+        }
+    } else if *mode == 1 && enter && *sel == 1 {
+        if *selected_lossy == true {
+            *selected_lossy = false;
+        } else {
+            *selected_lossy = true;
+        }
+    } else if (*mode == 1 || *mode == 2) && enter && *sel == 0 {
+        *selected_file_path = FileDialog::new().pick_file().unwrap().to_str().unwrap().to_string();
+    } else if *mode == 1 && enter && *sel == 2 {
+        disable_raw_mode().unwrap();
+        let name = std::path::Path::new(selected_file_path).file_name().unwrap().to_str().unwrap().split(".").collect::<Vec<&str>>()[0].to_string();
+        convert(selected_file_path, &(name + ".pcf"), true, *selected_lossy);
+        exit(0);
+    }
+    if *mode == 2 {
+        println!("Pixel Clustering Format 3000\n\n{}           {}", if *sel == 0 {Colorize::underline("Choose file").bright_blue()} else {Colorize::white("Choose file")},if *sel == 1 {Colorize::underline("Go!").bright_blue()} else {Colorize::white("Go!")});
+    } else if *mode == 1 {
+        println!("Pixel Clustering Format 3000\n\n{}    {}       {}", if *sel == 0 {Colorize::underline("Choose file").bright_blue()} else {Colorize::white("Choose file")},if *sel == 1 {Colorize::underline({
+            if *selected_lossy {
+                "Lossy"
+            } else {
+                "Lossless"
+            }
+        }).bright_blue()} else {Colorize::white({
+            if *selected_lossy {
+                "Lossy"
+            } else {
+                "Lossless"
+            }
+        })},if *sel == 2 {Colorize::underline("Go!").bright_blue()} else {Colorize::white("Go!")});
+    } else if *mode == 0 {
+        println!("Pixel Clustering Format 3000\n\n{}           {}", if *sel == 0 {Colorize::underline("Encode").bright_blue()} else {Colorize::white("Encode")},if *sel == 1 {Colorize::underline("Decode").bright_blue()} else {Colorize::white("Decode")});
+    }
+
+    crossterm::terminal::enable_raw_mode().unwrap();
+}
+
 fn main() {
     let args: Vec<String> = env::args().collect();
     if args.len() == 1 {
-        return;
+        let mut mode:u8 = 0;
+        let mut sel:u8 = 0;
+        let mut selected_lossy = false;
+        let mut selected_file_path = String::new();
+        crossterm::terminal::enable_raw_mode().unwrap();
+        display_menu(false, false,false, &mut mode, &mut sel, &mut selected_lossy, &mut selected_file_path);
+        loop {
+            if poll(Duration::from_millis(100)).unwrap() {
+                match read().unwrap() {
+                    Event::Key(event) => {
+                        if event.code == KeyCode::Left {
+                            display_menu(true,false,false, &mut mode, &mut sel, &mut selected_lossy, &mut selected_file_path);
+                        } else if event.code == KeyCode::Right {
+                            display_menu(false,true,false, &mut mode, &mut sel, &mut selected_lossy, &mut selected_file_path);
+                        } else if event.code == KeyCode::Enter {
+                            display_menu(false,false,true, &mut mode, &mut sel, &mut selected_lossy, &mut selected_file_path);
+                        }
+                        else if event.code == KeyCode::Esc || event.code == KeyCode::Char('q') {
+                            disable_raw_mode().unwrap();
+                            return;
+                        }
+                    }
+                    _ => {}
+                }
+            }
+        }
     }
     if args.contains(&"--decode".to_string()) {
         decode(args[1].clone(), args.contains(&"--verbose".to_string()));
