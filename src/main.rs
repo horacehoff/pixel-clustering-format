@@ -446,11 +446,11 @@ fn display_menu(left: bool, right: bool,  enter: bool, mode: &mut u8, sel: &mut 
         *selected_file_path = FileDialog::new().pick_file().unwrap().to_str().unwrap().to_string();
     } else if *mode == 1 && enter && *sel == 2 {
         disable_raw_mode().unwrap();
-        let name = std::path::Path::new(selected_file_path).file_name().unwrap().to_str().unwrap_or("".parse().unwrap()).split(".").collect::<Vec<&str>>()[0].to_string();
+        let name = std::path::Path::new(selected_file_path).file_name().unwrap().to_str().unwrap().split(".").collect::<Vec<&str>>()[0].to_string();
         convert(selected_file_path, &(name + ".pcf"), true, *selected_lossy);
         exit(0);
     } else if *mode == 2 && enter && *sel == 1 {
-        let output_file = FileDialog::new().set_file_name("output.png").save_file().unwrap_or("".parse().unwrap()).to_str().unwrap().to_string();
+        let output_file = FileDialog::new().set_file_name("output.png").save_file().unwrap().to_str().unwrap().to_string();
         decode(selected_file_path.to_string(),output_file, true);
         exit(0);
     }
