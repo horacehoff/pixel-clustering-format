@@ -7,12 +7,21 @@ mod data;
 
 use crate::decode::decode;
 use ahash::{HashMap, HashMapExt};
-use colored::Colorize;
+use colored::{Color, Colorize};
 use const_currying::const_currying;
+use crossterm::event;
+use crossterm::event::Event;
+use cushy::styles::Weight;
+// use floem::IntoView;
+// use floem::prelude::{button, h_stack, label, text, v_stack, Decorators, RwSignal};
 use hex_color::HexColor;
 use image::{open, Pixel, Rgba, RgbaImage};
 use indicatif::ProgressBar;
 use mashi_core::Encoder;
+use ratatui::Frame;
+use ratatui::layout::{Alignment, Offset, Rect};
+use ratatui::prelude::{Margin, Style, Stylize, Text};
+use ratatui::widgets::{Block, Paragraph, Wrap};
 use rayon::slice::ParallelSliceMut;
 
 fn optimize_math_str(input: String) -> String {
@@ -88,12 +97,10 @@ fn optimize_hex_color(input: String) -> String {
 
 #[inline]
 fn find_closest_palette_color(pixel: Rgba<u8>, palette: Vec<Rgba<u8>>, image: &RgbaImage, x: u32, y: u32, width: u32, height: u32) -> Rgba<u8> {
-    let mut base_radius: bool = true;
+    let mut base_radius: bool = false;
     let mut extra_radius: bool = true;
     let mut extra_extra_radius: bool = false;
     let mut diagonal_pixels: bool = false;
-
-    let quality_index = 0;
 
     let mut pixels = Vec::new();
     if x > 0 && y > 0 && diagonal_pixels {
@@ -229,7 +236,7 @@ fn convert(path: &str,
            #[maybe_const(dispatch = verbose, consts = [true, false])]verbose: bool,
            lossy: bool
 ) {
-    println!("PCF -- Converting {}", path.blue());
+    println!("PCF -- Converting {}", Colorize::blue(path));
     let mut image = open(path).unwrap().into_rgba8();
     if lossy {
         floyd_steinberg_dither(&mut image, path.to_string());
@@ -329,7 +336,7 @@ fn convert(path: &str,
     } else {
         file.write_all(&compressed.as_bytes()).unwrap();
     }
-    println!("Saved to {} - {}% of original size.", output_file.blue(), (fs::metadata(output_file).unwrap().len()*100/fs::metadata(path).unwrap().len()).to_string().blue())
+    println!("Saved to {} - {}% of original size.", Colorize::blue(output_file), (fs::metadata(output_file).unwrap().len()*100/fs::metadata(path).unwrap().len()).to_string().blue())
 }
 
 #[const_currying]
@@ -392,6 +399,9 @@ fn remove_dup_patterns(
 
 fn main() {
     let args: Vec<String> = env::args().collect();
+    if args.len() == 1 {
+        return;
+    }
     if args.contains(&"--decode".to_string()) {
         decode(args[1].clone(), args.contains(&"--verbose".to_string()));
     } else {
