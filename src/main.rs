@@ -21,6 +21,7 @@ use indicatif::ProgressBar;
 use mashi_core::Encoder;
 use rayon::slice::ParallelSliceMut;
 use rfd::FileDialog;
+use crate::data::compare;
 
 fn optimize_math_str(input: String) -> String {
     let mut nums: Vec<&str> = input.split('+').filter(|s| !s.is_empty()).collect();
@@ -94,11 +95,11 @@ fn optimize_hex_color(input: String) -> String {
 }
 
 #[inline]
-fn find_closest_palette_color(pixel: Rgba<u8>, image: &RgbaImage, x: u32, y: u32, width: u32, height: u32) -> Rgba<u8> {
-    let mut base_radius: bool = false;
-    let mut extra_radius: bool = true;
-    let mut extra_extra_radius: bool = false;
-    let mut diagonal_pixels: bool = false;
+fn find_closest_palette_color(pixel: Rgba<u8>, image: &RgbaImage, x: u32, y: u32, width: u32, height: u32, base_radius: bool, diagonal_pixels: bool, extra_radius: bool, extra_extra_radius:bool) -> Rgba<u8> {
+    // let mut base_radius: bool = true;
+    // let mut extra_radius: bool = false;
+    // let mut extra_extra_radius: bool = false;
+    // let mut diagonal_pixels: bool = false;
 
     let mut pixels = Vec::new();
     if x > 0 && y > 0 && diagonal_pixels {
@@ -187,13 +188,13 @@ fn add_colors(x1: Rgba<u8>, x2: Rgba<u8>) -> Rgba<u8> {
     Rgba([old_channels[0] + new_channels[0], old_channels[1] + new_channels[1], old_channels[2] + new_channels[2], old_channels[3] + new_channels[3]])
 }
 
-pub fn floyd_steinberg_dither(image: &mut RgbaImage, path: String) {
+pub fn floyd_steinberg_dither(image: &mut RgbaImage, base_radius: bool, diagonal_pixels: bool, extra_radius: bool, extra_extra_radius:bool) {
     let (width, height) = image.dimensions();
 
     for y in 0..height {
         for x in 0..width {
             let old_pixel = *image.get_pixel(x, y);
-            let new_pixel = find_closest_palette_color(old_pixel, image, x, y, width, height);
+            let new_pixel = find_closest_palette_color(old_pixel, image, x, y, width, height, base_radius, diagonal_pixels, extra_radius, extra_extra_radius);
             image.put_pixel(x, y, new_pixel);
             let old_channels = old_pixel.channels();
             let new_channels = new_pixel.channels();
@@ -226,12 +227,13 @@ pub fn floyd_steinberg_dither(image: &mut RgbaImage, path: String) {
 fn convert(path: &str,
            output_file: &str,
            #[maybe_const(dispatch = verbose, consts = [true, false])]verbose: bool,
-           lossy: bool
+           lossy: bool,
+           base_radius: bool, diagonal_pixels: bool, extra_radius: bool, extra_extra_radius:bool
 ) {
     println!("PCF -- Converting {}", Colorize::blue(path));
     let mut image = open(path).unwrap().into_rgba8();
     if lossy {
-        floyd_steinberg_dither(&mut image, path.to_string());
+        floyd_steinberg_dither(&mut image, base_radius, diagonal_pixels, extra_radius, extra_extra_radius);
         image.save("out.png").unwrap();
     }
     let width: u32 = image.width();
@@ -431,7 +433,7 @@ fn display_menu(left: bool, right: bool,  enter: bool, mode: &mut u8, sel: &mut 
     } else if *mode == 1 && enter && *sel == 2 {
         disable_raw_mode().unwrap();
         let name = std::path::Path::new(selected_file_path).file_name().unwrap().to_str().unwrap().split(".").collect::<Vec<&str>>()[0].to_string();
-        convert(selected_file_path, &(name + ".pcf"), true, *selected_lossy);
+        convert(selected_file_path, &(name + ".pcf"), true, *selected_lossy, true, false, false,false);
         exit(0);
     } else if *mode == 2 && enter && *sel == 1 {
         let output_file = FileDialog::new().set_file_name("output.png").save_file().unwrap().to_str().unwrap().to_string();
@@ -462,37 +464,38 @@ fn display_menu(left: bool, right: bool,  enter: bool, mode: &mut u8, sel: &mut 
 }
 
 fn main() {
-    let args: Vec<String> = env::args().collect();
-    if args.len() == 1 {
-        let mut mode:u8 = 0;
-        let mut sel:u8 = 0;
-        let mut selected_lossy = false;
-        let mut selected_file_path = String::new();
-        crossterm::terminal::enable_raw_mode().unwrap();
-        display_menu(false, false,false, &mut mode, &mut sel, &mut selected_lossy, &mut selected_file_path);
-        loop {
-            if poll(Duration::from_millis(100)).unwrap() {
-                if let Event::Key(event) = read().unwrap() {
-                    if event.code == KeyCode::Left {
-                        display_menu(true,false,false, &mut mode, &mut sel, &mut selected_lossy, &mut selected_file_path);
-                    } else if event.code == KeyCode::Right {
-                        display_menu(false,true,false, &mut mode, &mut sel, &mut selected_lossy, &mut selected_file_path);
-                    } else if event.code == KeyCode::Enter {
-                        display_menu(false,false,true, &mut mode, &mut sel, &mut selected_lossy, &mut selected_file_path);
-                    }
-                    else if event.code == KeyCode::Esc || event.code == KeyCode::Char('q') {
-                        disable_raw_mode().unwrap();
-                        return;
-                    }
-                }
-            }
-        }
-    }
-    if args.contains(&"--decode".to_string()) {
-        decode(args[1].clone(), "output.png".to_string(), args.contains(&"--verbose".to_string()));
-    } else {
-        let file_path = args[1].to_string();
-        let name = std::path::Path::new(&file_path).file_name().unwrap().to_str().unwrap().split(".").collect::<Vec<&str>>()[0].to_string();
-        convert(&args[1], &(name + ".pcf"), args.contains(&"--verbose".to_string()), args.contains(&"--lossy".to_string()));
-    }
+    compare();
+    // let args: Vec<String> = env::args().collect();
+    // if args.len() == 1 {
+    //     let mut mode:u8 = 0;
+    //     let mut sel:u8 = 0;
+    //     let mut selected_lossy = false;
+    //     let mut selected_file_path = String::new();
+    //     crossterm::terminal::enable_raw_mode().unwrap();
+    //     display_menu(false, false,false, &mut mode, &mut sel, &mut selected_lossy, &mut selected_file_path);
+    //     loop {
+    //         if poll(Duration::from_millis(100)).unwrap() {
+    //             if let Event::Key(event) = read().unwrap() {
+    //                 if event.code == KeyCode::Left {
+    //                     display_menu(true,false,false, &mut mode, &mut sel, &mut selected_lossy, &mut selected_file_path);
+    //                 } else if event.code == KeyCode::Right {
+    //                     display_menu(false,true,false, &mut mode, &mut sel, &mut selected_lossy, &mut selected_file_path);
+    //                 } else if event.code == KeyCode::Enter {
+    //                     display_menu(false,false,true, &mut mode, &mut sel, &mut selected_lossy, &mut selected_file_path);
+    //                 }
+    //                 else if event.code == KeyCode::Esc || event.code == KeyCode::Char('q') {
+    //                     disable_raw_mode().unwrap();
+    //                     return;
+    //                 }
+    //             }
+    //         }
+    //     }
+    // }
+    // if args.contains(&"--decode".to_string()) {
+    //     decode(args[1].clone(), "output.png".to_string(), args.contains(&"--verbose".to_string()));
+    // } else {
+    //     let file_path = args[1].to_string();
+    //     let name = std::path::Path::new(&file_path).file_name().unwrap().to_str().unwrap().split(".").collect::<Vec<&str>>()[0].to_string();
+    //     convert(&args[1], &(name + ".pcf"), args.contains(&"--verbose".to_string()), args.contains(&"--lossy".to_string()), true, false, false,false);
+    // }
 }
