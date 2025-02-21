@@ -464,8 +464,9 @@ fn display_menu(left: bool, right: bool,  enter: bool, mode: &mut u8, sel: &mut 
 }
 
 fn main() {
-    compare();
-    // let args: Vec<String> = env::args().collect();
+    let args: Vec<String> = env::args().collect();
+    println!("{args:?}");
+    compare(args);
     // if args.len() == 1 {
     //     let mut mode:u8 = 0;
     //     let mut sel:u8 = 0;
