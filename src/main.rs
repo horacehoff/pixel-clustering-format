@@ -234,7 +234,9 @@ fn convert(path: &str,
     let mut image = open(path).unwrap().into_rgba8();
     if lossy {
         floyd_steinberg_dither(&mut image, base_radius, diagonal_pixels, extra_radius, extra_extra_radius);
-        image.save("dither-output.png").unwrap();
+        if cfg!(debug_assertions) {
+            image.save("dither-output.png").unwrap();
+        }
     }
     let width: u32 = image.width();
     let height: u32 = image.height();
@@ -295,7 +297,6 @@ fn convert(path: &str,
                     .push(pixel.0);
             }
         }
-        // if format!("{grouped_coords:?}").len() > format!("{y_coords:?}").len() {
         if size_of_val(&grouped_coords) > size_of_val(&y_coords) {
             grouped_coords = y_coords;
             is_y = true;
