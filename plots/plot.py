@@ -42,9 +42,9 @@ for (originals, transformed, compressed_lossy, names) in zip(originals_split, tr
 
     all_bar_pos = range(len(originals) * 3)
 
-    plt.bar(png_bar_pos, png_bar, width=barWidth, color='r', label='.PNG')
-    plt.bar(pcf_bar_pos, pcf_bar, width=barWidth, color='b', label='.PCF')
-    plt.bar(pcf_lossy_bar_pos, pcf_lossy_bar, width=barWidth, color='g', label='.PCF lossy')
+    plt.bar(png_bar_pos, png_bar, width=barWidth, color='r', label='PNG')
+    plt.bar(pcf_bar_pos, pcf_bar, width=barWidth, color='b', label='PCF')
+    plt.bar(pcf_lossy_bar_pos, pcf_lossy_bar, width=barWidth, color='g', label='PCF --lossy')
 
     plt.legend()
 
@@ -65,7 +65,7 @@ for (originals, transformed, compressed_lossy, names) in zip(originals_split, tr
         label.append(round(compressed_lossy[x] / 1000, 2))
 
     for i in range(len(all_bar_pos)):
-        plt.text(x=all_bar_pos[i] + 0.5, y=label[i] + 0.1, s=label[i], size=6)
+        plt.text(x=all_bar_pos[i] + 0.5, y=label[i] + 0.1, s=label[i], size=5)
 
     plt.savefig(f"fig{chunkindex}.png", dpi=1000, pad_inches=0, bbox_inches="tight")
     plt.clf()

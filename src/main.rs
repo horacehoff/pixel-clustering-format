@@ -234,7 +234,7 @@ fn convert(path: &str,
     let mut image = open(path).unwrap().into_rgba8();
     if lossy {
         floyd_steinberg_dither(&mut image, base_radius, diagonal_pixels, extra_radius, extra_extra_radius);
-        image.save("out.png").unwrap();
+        image.save("dither-output.png").unwrap();
     }
     let width: u32 = image.width();
     let height: u32 = image.height();
@@ -465,38 +465,37 @@ fn display_menu(left: bool, right: bool,  enter: bool, mode: &mut u8, sel: &mut 
 
 fn main() {
     let args: Vec<String> = env::args().collect();
-    println!("{args:?}");
-    compare(args);
-    // if args.len() == 1 {
-    //     let mut mode:u8 = 0;
-    //     let mut sel:u8 = 0;
-    //     let mut selected_lossy = false;
-    //     let mut selected_file_path = String::new();
-    //     crossterm::terminal::enable_raw_mode().unwrap();
-    //     display_menu(false, false,false, &mut mode, &mut sel, &mut selected_lossy, &mut selected_file_path);
-    //     loop {
-    //         if poll(Duration::from_millis(100)).unwrap() {
-    //             if let Event::Key(event) = read().unwrap() {
-    //                 if event.code == KeyCode::Left {
-    //                     display_menu(true,false,false, &mut mode, &mut sel, &mut selected_lossy, &mut selected_file_path);
-    //                 } else if event.code == KeyCode::Right {
-    //                     display_menu(false,true,false, &mut mode, &mut sel, &mut selected_lossy, &mut selected_file_path);
-    //                 } else if event.code == KeyCode::Enter {
-    //                     display_menu(false,false,true, &mut mode, &mut sel, &mut selected_lossy, &mut selected_file_path);
-    //                 }
-    //                 else if event.code == KeyCode::Esc || event.code == KeyCode::Char('q') {
-    //                     disable_raw_mode().unwrap();
-    //                     return;
-    //                 }
-    //             }
-    //         }
-    //     }
-    // }
-    // if args.contains(&"--decode".to_string()) {
-    //     decode(args[1].clone(), "output.png".to_string(), args.contains(&"--verbose".to_string()));
-    // } else {
-    //     let file_path = args[1].to_string();
-    //     let name = std::path::Path::new(&file_path).file_name().unwrap().to_str().unwrap().split(".").collect::<Vec<&str>>()[0].to_string();
-    //     convert(&args[1], &(name + ".pcf"), args.contains(&"--verbose".to_string()), args.contains(&"--lossy".to_string()), true, false, false,false);
-    // }
+    if args.len() == 1 {
+        let mut mode:u8 = 0;
+        let mut sel:u8 = 0;
+        let mut selected_lossy = false;
+        let mut selected_file_path = String::new();
+        crossterm::terminal::enable_raw_mode().unwrap();
+        display_menu(false, false,false, &mut mode, &mut sel, &mut selected_lossy, &mut selected_file_path);
+        loop {
+            if poll(Duration::from_millis(100)).unwrap() {
+                if let Event::Key(event) = read().unwrap() {
+                    if event.code == KeyCode::Left {
+                        display_menu(true,false,false, &mut mode, &mut sel, &mut selected_lossy, &mut selected_file_path);
+                    } else if event.code == KeyCode::Right {
+                        display_menu(false,true,false, &mut mode, &mut sel, &mut selected_lossy, &mut selected_file_path);
+                    } else if event.code == KeyCode::Enter {
+                        display_menu(false,false,true, &mut mode, &mut sel, &mut selected_lossy, &mut selected_file_path);
+                    }
+                    else if event.code == KeyCode::Esc || event.code == KeyCode::Char('q') {
+                        disable_raw_mode().unwrap();
+                        return;
+                    }
+                }
+            }
+        }
+    } else {
+        if args.contains(&"--decode".to_string()) {
+            decode(args[1].clone(), "output.png".to_string(), args.contains(&"--verbose".to_string()));
+        } else {
+            let file_path = args[1].to_string();
+            let name = std::path::Path::new(&file_path).file_name().unwrap().to_str().unwrap().split(".").collect::<Vec<&str>>()[0].to_string();
+            convert(&args[1], &(name + ".pcf"), args.contains(&"--verbose".to_string()), args.contains(&"--lossy".to_string()), true, false, false,false);
+        }
+    }
 }
