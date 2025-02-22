@@ -427,7 +427,7 @@ fn display_menu(left: bool, right: bool,  enter: bool, mode: &mut u8, sel: &mut 
             *mode = 1;
         }
     } else if *mode == 1 && enter && *sel == 1 {
-        *selected_lossy = *selected_lossy != true;
+        *selected_lossy = !*selected_lossy
     } else if (*mode == 1 || *mode == 2) && enter && *sel == 0 {
         *selected_file_path = FileDialog::new().pick_file().unwrap().to_str().unwrap().to_string();
     } else if *mode == 1 && enter && *sel == 2 {
@@ -489,13 +489,11 @@ fn main() {
                 }
             }
         }
+    } else if args.contains(&"--decode".to_string()) {
+        decode(args[1].clone(), "output.png".to_string(), args.contains(&"--verbose".to_string()));
     } else {
-        if args.contains(&"--decode".to_string()) {
-            decode(args[1].clone(), "output.png".to_string(), args.contains(&"--verbose".to_string()));
-        } else {
-            let file_path = args[1].to_string();
-            let name = std::path::Path::new(&file_path).file_name().unwrap().to_str().unwrap().split(".").collect::<Vec<&str>>()[0].to_string();
-            convert(&args[1], &(name + ".pcf"), args.contains(&"--verbose".to_string()), args.contains(&"--lossy".to_string()), true, false, false,false);
-        }
+        let file_path = args[1].to_string();
+        let name = std::path::Path::new(&file_path).file_name().unwrap().to_str().unwrap().split(".").collect::<Vec<&str>>()[0].to_string();
+        convert(&args[1], &(name + ".pcf"), args.contains(&"--verbose".to_string()), args.contains(&"--lossy".to_string()), true, false, false,false);
     }
 }

@@ -36,16 +36,16 @@ pub fn compare(args:Vec<String>) {
         }
         compressed_lossy.push(*various_sizes.iter().min().unwrap());
         println!("{:?}", entry.path().file_name().unwrap());
-    };
+    }
     let mut file = File::open("data.txt").unwrap();
     let mut buffer:Vec<u8> = Vec::new();
-    let decoded = file.read_to_end(&mut buffer);
+    file.read_to_end(&mut buffer).unwrap();
     // if !buffer.is_empty() {
-        let result:(Vec<String>,Vec<usize>,Vec<usize>,Vec<usize>) = bincode::deserialize(&buffer).unwrap();
-        name = result.0;
-        original = result.1;
-        compressed = result.2;
-        compressed_lossy = result.3;
+    let result:(Vec<String>,Vec<usize>,Vec<usize>,Vec<usize>) = bincode::deserialize(&buffer).unwrap();
+    name = result.0;
+    original = result.1;
+    compressed = result.2;
+    compressed_lossy = result.3;
     // }
 
     let entries = fs::read_dir("test-images/").unwrap();
