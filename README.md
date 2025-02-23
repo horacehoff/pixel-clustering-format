@@ -45,13 +45,14 @@ cargo run --release -- [filename] [--verbose] [--decode]
 ```
 
 ## Comparisons with PNG
-![Plot 1](plots/fig1.png)
-![Plot 2](plots/fig2.png)
-![Plot 3](plots/fig3.png)
-![Plot 4](plots/fig4.png)
-![Plot 5](plots/fig5.png)
-![Plot 6](plots/fig6.png)
-![Plot 7](plots/fig7.png)
+
+![Plot 1](png_comparisons/fig1.png)
+![Plot 2](png_comparisons/fig2.png)
+![Plot 3](png_comparisons/fig3.png)
+![Plot 4](png_comparisons/fig4.png)
+![Plot 5](png_comparisons/fig5.png)
+![Plot 6](png_comparisons/fig6.png)
+![Plot 7](png_comparisons/fig7.png)
 
 ## Examples
 ### Blue image
