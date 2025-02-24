@@ -121,7 +121,7 @@ fn display_menu(
     }
     if *mode == 3 {
         println!(
-            "Pixel Clustering Format 3000 -- Lossy Settings\nNOTE: Try different settings combinations, there isn't usually a one-size-fits-all solution\n\n         Base -- Diagonal\n{} {}  {}",
+            "Pixel Clustering Format 3000 -- Lossy Settings\nNOTE: Try different settings combinations, there usually isn't a one-size-fits-all solution.\n\n         Base -- Diagonal -- Extra -- Extra²\n{}  {}   {}       {}    {}",
             if *sel == 0 {
                 Colorize::underline("GO BACK").bright_blue()
             } else {
@@ -136,6 +136,16 @@ fn display_menu(
                 format!("{}", diagonal_pixels.to_string().bright_blue().underline())
             } else {
                 format!("{}", diagonal_pixels.to_string())
+            },
+            if *sel == 3 {
+                format!("{}", extra_radius.to_string().bright_blue().underline())
+            } else {
+                format!("{}", extra_radius.to_string())
+            },
+            if *sel == 4 {
+                format!("{}", extra_extra_radius.to_string().bright_blue().underline())
+            } else {
+                format!("{}", extra_extra_radius.to_string())
             },
         );
     } else if *mode == 2 {
