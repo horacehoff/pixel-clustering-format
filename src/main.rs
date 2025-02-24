@@ -30,10 +30,22 @@ fn display_menu(
     clearscreen::clear().unwrap();
     disable_raw_mode().unwrap();
 
-    if (*mode == 0 || *mode == 2) && left {
+    if (*mode == 0) && left {
         *sel = 0;
-    } else if (*mode == 0 || *mode == 2) && right {
+    } else if (*mode == 0) && right {
         *sel = 1;
+    } else if *mode == 2 && left {
+        if *sel > 0 {
+            *sel -= 1;
+        } else {
+            *sel = 0;
+        }
+    } else if *mode == 2 && right {
+        if *sel < 2 {
+            *sel += 1;
+        } else {
+            *sel = 2;
+        }
     } else if *mode == 1 && left {
         if !*selected_lossy && *sel == 3 {
             *sel = 1;
@@ -134,6 +146,9 @@ fn display_menu(
         clearscreen::clear().unwrap();
         decode(selected_file_path.to_string(), output_file, true);
         exit(0);
+    } else if *mode == 2 && enter && *sel == 2 {
+        *mode = 0;
+        *sel = 0;
     }
     if *mode == 3 {
         println!(
