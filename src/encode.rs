@@ -4,7 +4,7 @@ use const_currying::const_currying;
 use crossterm::style::Stylize;
 use hex_color::HexColor;
 use image::{open, Pixel, Rgba, RgbaImage};
-use indicatif::ProgressBar;
+use linya::{Bar, Progress};
 use mashi_core::Encoder;
 use rayon::prelude::ParallelSliceMut;
 use std::fs;
@@ -299,11 +299,12 @@ pub fn convert(
     let height: u32 = image.height();
     let mut x = 0;
     let mut y = 0;
+    let pixels = image.pixels();
 
     // put the pixels in a hashmap
-    let bar = ProgressBar::new(image.pixels().len() as u64);
+    let mut progress = Progress::new();
+    let bar: Bar = progress.bar(pixels.len(), "Registering pixels");
     let mut px_colors: HashMap<String, Vec<(u32, u32)>> = Default::default();
-    let pixels = image.pixels();
     for w in pixels {
         let colors = w.channels();
         let color = optimize_hex_color(
@@ -320,7 +321,7 @@ pub fn convert(
             x += 1;
         }
         if verbose {
-            bar.inc(1);
+            progress.inc_and_draw(&bar, 1);
         }
     }
     // remove dominant color
@@ -334,7 +335,8 @@ pub fn convert(
 
     let mut outputf: String = format!("{width}%{height}%{bg_color}%");
 
-    let bar = ProgressBar::new(px_colors.len() as u64);
+    let mut progress = Progress::new();
+    let bar: Bar = progress.bar(px_colors.len(), "Converting");
     for (color, pixels) in px_colors {
         let mut grouped_coords: HashMap<String, Vec<u32>> = Default::default();
         let mut y_coords: HashMap<String, Vec<u32>> = Default::default();
@@ -376,7 +378,7 @@ pub fn convert(
             outputf.push_str(&sequenced);
         }
         if verbose {
-            bar.inc(1);
+            progress.inc_and_draw(&bar, 1);
         }
     }
 
@@ -407,13 +409,10 @@ fn find_pattern(
     #[maybe_const(dispatch = verbose, consts = [true, false])] verbose: bool,
 ) -> Vec<(String, usize)> {
     let mut patterns = HashMap::with_capacity(target.len());
-    let bar = ProgressBar::new(target.len() as u64);
-    for i in 0..=target.len().saturating_sub(step) {
+    let iter = 0..=target.len().saturating_sub(step);
+    for i in iter {
         let slice = &target[i..i + step];
         *patterns.entry(slice).or_insert(0) += 1;
-        if verbose {
-            bar.inc(1);
-        }
     }
 
     let mut new: Vec<_> = patterns.into_iter().collect();

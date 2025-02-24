@@ -10,7 +10,7 @@ mod encode;
 use crate::decode::decode;
 use crate::encode::convert;
 use colored::Colorize;
-use crossterm::event::{poll, read, Event, KeyCode};
+use crossterm::event::{poll, read, Event, KeyCode, KeyEventKind};
 use crossterm::execute;
 use crossterm::terminal::{disable_raw_mode, ClearType};
 use rfd::FileDialog;
@@ -79,6 +79,7 @@ fn display_menu(
             .split(".")
             .collect::<Vec<&str>>()[0]
             .to_string();
+        clearscreen::clear().unwrap();
         convert(
             selected_file_path,
             &(name + ".pcf"),
@@ -186,43 +187,47 @@ fn main() {
         loop {
             if poll(Duration::from_millis(100)).unwrap() {
                 if let Event::Key(event) = read().unwrap() {
-                    if event.code == KeyCode::Left {
-                        display_menu(
-                            true,
-                            false,
-                            false,
-                            &mut mode,
-                            &mut sel,
-                            &mut selected_lossy,
-                            &mut selected_file_path,
-                        );
-                    } else if event.code == KeyCode::Right {
-                        display_menu(
-                            false,
-                            true,
-                            false,
-                            &mut mode,
-                            &mut sel,
-                            &mut selected_lossy,
-                            &mut selected_file_path,
-                        );
-                    } else if event.code == KeyCode::Enter {
-                        display_menu(
-                            false,
-                            false,
-                            true,
-                            &mut mode,
-                            &mut sel,
-                            &mut selected_lossy,
-                            &mut selected_file_path,
-                        );
-                    } else if event.code == KeyCode::Esc || event.code == KeyCode::Char('q') {
-                        disable_raw_mode().unwrap();
-                        return;
+                    if event.kind == KeyEventKind::Press {
+                        if event.code == KeyCode::Left {
+                            display_menu(
+                                true,
+                                false,
+                                false,
+                                &mut mode,
+                                &mut sel,
+                                &mut selected_lossy,
+                                &mut selected_file_path,
+                            );
+                        } else if event.code == KeyCode::Right {
+                            display_menu(
+                                false,
+                                true,
+                                false,
+                                &mut mode,
+                                &mut sel,
+                                &mut selected_lossy,
+                                &mut selected_file_path,
+                            );
+                        } else if event.code == KeyCode::Enter {
+                            display_menu(
+                                false,
+                                false,
+                                true,
+                                &mut mode,
+                                &mut sel,
+                                &mut selected_lossy,
+                                &mut selected_file_path,
+                            );
+                        } else if event.code == KeyCode::Esc || event.code == KeyCode::Char('q') {
+                            disable_raw_mode().unwrap();
+                            return;
+                        }
                     }
+
                 }
             }
         }
+        disable_raw_mode().unwrap();
     } else if args.contains(&"--decode".to_string()) {
         decode(
             args[1].clone(),
@@ -250,4 +255,5 @@ fn main() {
             false,
         );
     }
+    disable_raw_mode().unwrap();
 }
