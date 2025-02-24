@@ -10,6 +10,7 @@ use crate::decode::decode;
 use crate::encode::convert;
 use colored::Colorize;
 use crossterm::event::{poll, read, Event, KeyCode, KeyEventKind};
+use crossterm::style::Stylize;
 use crossterm::terminal::disable_raw_mode;
 use rfd::FileDialog;
 
@@ -21,6 +22,10 @@ fn display_menu(
     sel: &mut u8,
     selected_lossy: &mut bool,
     selected_file_path: &mut String,
+    base_radius: &mut bool,
+    diagonal_pixels: &mut bool,
+    extra_radius: &mut bool,
+    extra_extra_radius: &mut bool,
 ) {
     clearscreen::clear().unwrap();
     disable_raw_mode().unwrap();
@@ -47,11 +52,29 @@ fn display_menu(
         }
     }
 
+    if *mode == 3 && left {
+        if *sel > 0 {
+            *sel -= 1;
+        } else {
+            *sel = 0;
+        }
+    }
+    if *mode == 3 && right {
+        if *sel < 4 {
+            *sel += 1;
+        } else {
+            *sel = 4;
+        }
+    }
+
+
     if *mode == 0 && enter {
         if *sel == 1 {
             *mode = 2;
+            *sel = 0;
         } else {
-            *mode = 1;
+            *mode = 3;
+            *sel = 0;
         }
     } else if *mode == 1 && enter && *sel == 1 {
         *selected_lossy = !*selected_lossy
@@ -96,7 +119,26 @@ fn display_menu(
         decode(selected_file_path.to_string(), output_file, true);
         exit(0);
     }
-    if *mode == 2 {
+    if *mode == 3 {
+        println!(
+            "Pixel Clustering Format 3000 -- Lossy Settings\nNOTE: Try different settings combinations, there isn't usually a one-size-fits-all solution\n\n         Base -- Diagonal\n{} {}  {}",
+            if *sel == 0 {
+                Colorize::underline("GO BACK").bright_blue()
+            } else {
+                Colorize::white("GO BACK")
+            },
+            if *sel == 1 {
+                format!("{}", base_radius.to_string().bright_blue().underline())
+            } else {
+                format!("{}", base_radius.to_string())
+            },
+            if *sel == 2 {
+                format!("{}", diagonal_pixels.to_string().bright_blue().underline())
+            } else {
+                format!("{}", diagonal_pixels.to_string())
+            },
+        );
+    } else if *mode == 2 {
         println!(
             "Pixel Clustering Format 3000\n\n{}           {}",
             if *sel == 0 {
@@ -168,6 +210,10 @@ fn main() {
         let mut sel: u8 = 0;
         let mut selected_lossy = false;
         let mut selected_file_path = String::new();
+        let mut base_radius = false;
+        let mut diagonal_pixels = false;
+        let mut extra_radius = false;
+        let mut extra_extra_radius = false;
         display_menu(
             false,
             false,
@@ -176,6 +222,10 @@ fn main() {
             &mut sel,
             &mut selected_lossy,
             &mut selected_file_path,
+            &mut base_radius,
+            &mut diagonal_pixels,
+            &mut extra_radius,
+            &mut extra_extra_radius
         );
         crossterm::terminal::enable_raw_mode().unwrap();
         loop {
@@ -191,6 +241,10 @@ fn main() {
                                 &mut sel,
                                 &mut selected_lossy,
                                 &mut selected_file_path,
+                                &mut base_radius,
+                                &mut diagonal_pixels,
+                                &mut extra_radius,
+                                &mut extra_extra_radius
                             );
                         } else if event.code == KeyCode::Right {
                             display_menu(
@@ -201,6 +255,10 @@ fn main() {
                                 &mut sel,
                                 &mut selected_lossy,
                                 &mut selected_file_path,
+                                &mut base_radius,
+                                &mut diagonal_pixels,
+                                &mut extra_radius,
+                                &mut extra_extra_radius
                             );
                         } else if event.code == KeyCode::Enter {
                             display_menu(
@@ -211,6 +269,10 @@ fn main() {
                                 &mut sel,
                                 &mut selected_lossy,
                                 &mut selected_file_path,
+                                &mut base_radius,
+                                &mut diagonal_pixels,
+                                &mut extra_radius,
+                                &mut extra_extra_radius
                             );
                         } else if event.code == KeyCode::Esc || event.code == KeyCode::Char('q') {
                             disable_raw_mode().unwrap();
