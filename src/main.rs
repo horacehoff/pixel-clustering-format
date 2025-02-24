@@ -1,5 +1,4 @@
 use std::env;
-use std::io::stdout;
 use std::process::exit;
 use std::time::Duration;
 
@@ -11,8 +10,7 @@ use crate::decode::decode;
 use crate::encode::convert;
 use colored::Colorize;
 use crossterm::event::{poll, read, Event, KeyCode, KeyEventKind};
-use crossterm::execute;
-use crossterm::terminal::{disable_raw_mode, ClearType};
+use crossterm::terminal::disable_raw_mode;
 use rfd::FileDialog;
 
 fn display_menu(
@@ -24,12 +22,7 @@ fn display_menu(
     selected_lossy: &mut bool,
     selected_file_path: &mut String,
 ) {
-    execute!(
-        stdout(),
-        crossterm::terminal::SetSize(80, 20),
-        crossterm::terminal::Clear(ClearType::All)
-    )
-        .unwrap();
+    clearscreen::clear().unwrap();
     disable_raw_mode().unwrap();
 
     if (*mode == 0 || *mode == 2) && left {
@@ -99,6 +92,7 @@ fn display_menu(
             .to_str()
             .unwrap()
             .to_string();
+        clearscreen::clear().unwrap();
         decode(selected_file_path.to_string(), output_file, true);
         exit(0);
     }
@@ -174,7 +168,6 @@ fn main() {
         let mut sel: u8 = 0;
         let mut selected_lossy = false;
         let mut selected_file_path = String::new();
-        crossterm::terminal::enable_raw_mode().unwrap();
         display_menu(
             false,
             false,
@@ -184,6 +177,7 @@ fn main() {
             &mut selected_lossy,
             &mut selected_file_path,
         );
+        crossterm::terminal::enable_raw_mode().unwrap();
         loop {
             if poll(Duration::from_millis(100)).unwrap() {
                 if let Event::Key(event) = read().unwrap() {
@@ -227,7 +221,6 @@ fn main() {
                 }
             }
         }
-        disable_raw_mode().unwrap();
     } else if args.contains(&"--decode".to_string()) {
         decode(
             args[1].clone(),

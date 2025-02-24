@@ -180,5 +180,5 @@ pub fn decode(
     }
 
     output.save(output_file.to_string()).unwrap();
-    println!("Saved to {}.", output_file.blue());
+    println!("\nSaved to {}.", output_file.blue());
 }

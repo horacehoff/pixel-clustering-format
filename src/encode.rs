@@ -394,7 +394,7 @@ pub fn convert(
         file.write_all(&compressed.as_bytes()).unwrap();
     }
     println!(
-        "Saved to {} - {}% of original size.",
+        "\nSaved to {} - {}% of original size.",
         Colorize::blue(output_file),
         (fs::metadata(output_file).unwrap().len() * 100 / fs::metadata(path).unwrap().len())
             .to_string()
