@@ -32,12 +32,9 @@ fn display_menu(
 
     if (*mode == 0 || *mode == 2) && left {
         *sel = 0;
-    }
-    if (*mode == 0 || *mode == 2) && right {
+    } else if (*mode == 0 || *mode == 2) && right {
         *sel = 1;
-    }
-
-    if *mode == 1 && left {
+    } else if *mode == 1 && left {
         if !*selected_lossy && *sel == 3 {
             *sel = 1;
         } else if *sel > 0 {
@@ -45,32 +42,27 @@ fn display_menu(
         } else {
             *sel = 0;
         }
-    }
-    if *mode == 1 && right {
+    } else if *mode == 1 && right {
         if !*selected_lossy && *sel == 1 {
             *sel = 3;
-        } else if *sel < 3 {
+        } else if *sel < 4 {
             *sel += 1;
         } else {
-            *sel = 3;
+            *sel = 4;
         }
-    }
-
-    if *mode == 3 && left {
+    } else if *mode == 3 && left {
         if *sel > 0 {
             *sel -= 1;
         } else {
             *sel = 0;
         }
-    }
-    if *mode == 3 && right {
+    } else if *mode == 3 && right {
         if *sel < 4 {
             *sel += 1;
         } else {
             *sel = 4;
         }
-    }
-    if *mode == 3 && enter {
+    } else if *mode == 3 && enter {
         if *sel == 0 {
             *mode = 1;
         } else if *sel == 1 {
@@ -82,8 +74,12 @@ fn display_menu(
         } else if *sel == 4 {
             *extra_extra_radius = !*extra_extra_radius;
         }
+    } else if *mode == 1 && enter && *sel == 4 {
+        *mode = 0;
+        *sel = 0;
     } else if *mode == 1 && enter && *sel == 2 {
         *mode = 3;
+        *sel = 1;
     } else if *mode == 0 && enter {
         if *sel == 1 {
             *mode = 2;
@@ -141,7 +137,7 @@ fn display_menu(
     }
     if *mode == 3 {
         println!(
-            "Pixel Clustering Format 3000 -- Lossy Settings\nNOTE: Try different settings combinations, there usually isn't a one-size-fits-all solution.\n\n         Base -- Diagonal -- Extra -- Extra²\n{}  {}   {}       {}    {}",
+            "Pixel Clustering Format 3000 -- Lossy Settings\nNOTE: The more options enabled, the better the image will look, but the bigger it will be.\n      Try different settings combinations, there usually isn't a one-size-fits-all solution.\n\n         Base -- Diagonal -- Extra -- Extra²\n{}  {}   {}       {}    {}",
             if *sel == 0 {
                 Colorize::underline("GO BACK").bright_blue()
             } else {
@@ -170,7 +166,7 @@ fn display_menu(
         );
     } else if *mode == 2 {
         println!(
-            "Pixel Clustering Format 3000\n\n{}           {}",
+            "Pixel Clustering Format 3000\n\n{}     {}     {}",
             if *sel == 0 {
                 Colorize::underline("Choose file").bright_blue()
             } else {
@@ -180,11 +176,16 @@ fn display_menu(
                 Colorize::underline("Go!").bright_blue()
             } else {
                 Colorize::white("Go!")
+            },
+            if *sel == 2 {
+                Colorize::underline("GO BACK").bright_blue()
+            } else {
+                Colorize::white("GO BACK")
             }
         );
     } else if *mode == 1 {
         println!(
-            "Pixel Clustering Format 3000\n\n{}    {}    {}     {}",
+            "Pixel Clustering Format 3000\n\n{}    {}    {}     {}     {}",
             if *sel == 0 {
                 Colorize::underline("Choose file").bright_blue()
             } else {
@@ -221,7 +222,12 @@ fn display_menu(
                 Colorize::underline("Go!").bright_blue()
             } else {
                 Colorize::white("Go!")
-            }
+            },
+            if *sel == 4 {
+                Colorize::underline("GO BACK").bright_blue()
+            } else {
+                Colorize::white("GO BACK")
+            },
         );
     } else if *mode == 0 {
         println!(
