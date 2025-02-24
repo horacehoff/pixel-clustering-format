@@ -8,7 +8,7 @@ mod encode;
 
 use crate::decode::decode;
 use crate::encode::convert;
-use colored::Colorize;
+use colored::{ColoredString, Colorize};
 use crossterm::event::{poll, read, Event, KeyCode, KeyEventKind};
 use crossterm::style::Stylize;
 use crossterm::terminal::disable_raw_mode;
@@ -38,17 +38,21 @@ fn display_menu(
     }
 
     if *mode == 1 && left {
-        if *sel > 0 {
+        if !*selected_lossy && *sel == 3 {
+            *sel = 1;
+        } else if *sel > 0 {
             *sel -= 1;
         } else {
             *sel = 0;
         }
     }
     if *mode == 1 && right {
-        if *sel < 2 {
+        if !*selected_lossy && *sel == 1 {
+            *sel = 3;
+        } else if *sel < 3 {
             *sel += 1;
         } else {
-            *sel = 2;
+            *sel = 3;
         }
     }
 
@@ -66,14 +70,26 @@ fn display_menu(
             *sel = 4;
         }
     }
-
-
-    if *mode == 0 && enter {
+    if *mode == 3 && enter {
+        if *sel == 0 {
+            *mode = 1;
+        } else if *sel == 1 {
+            *base_radius = !*base_radius;
+        } else if *sel == 2 {
+            *diagonal_pixels = !*diagonal_pixels;
+        } else if *sel == 3 {
+            *extra_radius = !*extra_radius;
+        } else if *sel == 4 {
+            *extra_extra_radius = !*extra_extra_radius;
+        }
+    } else if *mode == 1 && enter && *sel == 2 {
+        *mode = 3;
+    } else if *mode == 0 && enter {
         if *sel == 1 {
             *mode = 2;
             *sel = 0;
         } else {
-            *mode = 3;
+            *mode = 1;
             *sel = 0;
         }
     } else if *mode == 1 && enter && *sel == 1 {
@@ -85,7 +101,11 @@ fn display_menu(
             .to_str()
             .unwrap()
             .to_string();
-    } else if *mode == 1 && enter && *sel == 2 {
+    } else if *mode == 1 && enter && if *selected_lossy {
+        *sel == 3
+    } else {
+        *sel == 2
+    } {
         disable_raw_mode().unwrap();
         let name = std::path::Path::new(selected_file_path)
             .file_name()
@@ -101,10 +121,10 @@ fn display_menu(
             &(name + ".pcf"),
             true,
             *selected_lossy,
-            true,
-            false,
-            false,
-            false,
+            *base_radius,
+            *diagonal_pixels,
+            *extra_radius,
+            *extra_extra_radius,
         );
         exit(0);
     } else if *mode == 2 && enter && *sel == 1 {
@@ -164,7 +184,7 @@ fn display_menu(
         );
     } else if *mode == 1 {
         println!(
-            "Pixel Clustering Format 3000\n\n{}    {}       {}",
+            "Pixel Clustering Format 3000\n\n{}    {}    {}     {}",
             if *sel == 0 {
                 Colorize::underline("Choose file").bright_blue()
             } else {
@@ -188,7 +208,16 @@ fn display_menu(
                     }
                 })
             },
-            if *sel == 2 {
+            if *selected_lossy {
+                if *sel == 2 {
+                    Colorize::underline("Settings").bright_blue()
+                } else {
+                    ColoredString::from("Settings")
+                }
+            } else {
+                ColoredString::from("")
+            },
+            if *sel == 3 {
                 Colorize::underline("Go!").bright_blue()
             } else {
                 Colorize::white("Go!")
