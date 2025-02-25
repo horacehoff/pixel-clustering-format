@@ -37,12 +37,14 @@ git clone https://github.com/horacehoff/pixel-clustering-format
 ```
 
 ## Usage
-
+PCF can be used directly:
 ```sh
 cargo run --release -- [filename] [--verbose] [--decode]
 // OR
 ./pcf [filename] [--verbose] [--decode]
 ```
+
+Or it can be used with its integrated TUI, which also exposes all of the settings. 
 
 ## Comparisons with PNG
 
