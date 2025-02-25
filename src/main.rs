@@ -121,7 +121,6 @@ fn display_menu(
             .unwrap()
             .to_string();
     } else if *mode == 1 && enter && *sel == 3 {
-        // println!("CONDITIONS ARE FULFILLED!");
         disable_raw_mode().unwrap();
         let name = std::path::Path::new(selected_file_path)
             .file_name()
@@ -169,22 +168,22 @@ fn display_menu(
             if *sel == 1 {
                 format!("{}", base_radius.to_string().bright_blue().underline())
             } else {
-                format!("{}", base_radius.to_string())
+                base_radius.to_string()
             },
             if *sel == 2 {
                 format!("{}", diagonal_pixels.to_string().bright_blue().underline())
             } else {
-                format!("{}", diagonal_pixels.to_string())
+                diagonal_pixels.to_string()
             },
             if *sel == 3 {
                 format!("{}", extra_radius.to_string().bright_blue().underline())
             } else {
-                format!("{}", extra_radius.to_string())
+                extra_radius.to_string()
             },
             if *sel == 4 {
                 format!("{}", extra_extra_radius.to_string().bright_blue().underline())
             } else {
-                format!("{}", extra_extra_radius.to_string())
+                extra_extra_radius.to_string()
             },
         );
     } else if *mode == 2 {
