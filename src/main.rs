@@ -200,7 +200,7 @@ fn display_menu(
         );
     } else if *mode == 1 {
         println!(
-            "Pixel Clustering Format 3000\n\n{}    {}    {}    {}    {}",
+            "Pixel Clustering Format 3000\n\n{}    {}    {} {}    {}",
             if *sel == 0 {
                 Colorize::underline("Choose file").bright_blue()
             } else {
@@ -226,12 +226,12 @@ fn display_menu(
             },
             if *selected_lossy {
                 if *sel == 2 {
-                    Colorize::underline("Settings").bright_blue()
+                    format!("{}   ",Colorize::underline("Settings").bright_blue())
                 } else {
-                    ColoredString::from("Settings")
+                    "Settings   ".parse().unwrap()
                 }
             } else {
-                ColoredString::from("")
+                ColoredString::from("").parse().unwrap()
             },
             if *sel == 3 {
                 Colorize::underline("Go!").bright_blue()
