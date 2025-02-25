@@ -181,7 +181,7 @@ fn display_menu(
         );
     } else if *mode == 2 {
         println!(
-            "Pixel Clustering Format 3000\n\n{}     {}     {}",
+            "Pixel Clustering Format 3000\n\n{}    {}    {}",
             if *sel == 0 {
                 Colorize::underline("Choose file").bright_blue()
             } else {
@@ -200,7 +200,7 @@ fn display_menu(
         );
     } else if *mode == 1 {
         println!(
-            "Pixel Clustering Format 3000\n\n{}    {}    {}     {}     {}",
+            "Pixel Clustering Format 3000\n\n{}    {}    {}    {}    {}",
             if *sel == 0 {
                 Colorize::underline("Choose file").bright_blue()
             } else {
