@@ -9,7 +9,7 @@ mod encode;
 use crate::decode::decode;
 use crate::encode::convert;
 use colored::{ColoredString, Colorize};
-use crossterm::event::{poll, read, Event, KeyCode, KeyEventKind};
+use crossterm::event::{poll, read, Event, KeyCode, KeyEventKind, KeyModifiers, ModifierKeyCode};
 use crossterm::style::Stylize;
 use crossterm::terminal::disable_raw_mode;
 use rfd::FileDialog;
@@ -30,10 +30,18 @@ fn display_menu(
     clearscreen::clear().unwrap();
     disable_raw_mode().unwrap();
 
-    if (*mode == 0) && left {
-        *sel = 0;
-    } else if (*mode == 0) && right {
-        *sel = 1;
+    if *mode == 0 && left {
+        if *sel > 0 {
+            *sel -= 1;
+        } else {
+            *sel = 0;
+        }
+    } else if *mode == 0 && right {
+        if *sel < 2 {
+            *sel += 1;
+        } else {
+            *sel = 2;
+        }
     } else if *mode == 2 && left {
         if *sel > 0 {
             *sel -= 1;
@@ -96,9 +104,12 @@ fn display_menu(
         if *sel == 1 {
             *mode = 2;
             *sel = 0;
-        } else {
+        } else if *sel == 0 {
             *mode = 1;
             *sel = 0;
+        } else if *sel == 2 {
+            disable_raw_mode().unwrap();
+            exit(0);
         }
     } else if *mode == 1 && enter && *sel == 1 {
         *selected_lossy = !*selected_lossy
@@ -152,7 +163,7 @@ fn display_menu(
     }
     if *mode == 3 {
         println!(
-            "Pixel Clustering Format 3000 -- Lossy Settings\nNOTE: The more options enabled, the better the image will look, but the bigger it will be.\n      Try different settings combinations, there usually isn't a one-size-fits-all solution.\n\n         Base -- Diagonal -- Extra -- Extra²\n{}  {}   {}       {}    {}",
+            "Pixel Clustering Format 3000 -- Lossy Settings\nby Horace Hoff\nNOTE: These settings control the range of the palette used by the dithering algorithm on a per-pixel basis.\n      The more options enabled, the better the image will look, but the bigger it will be.\n      Try different settings combinations, there usually isn't a one-size-fits-all solution.\n\n         Base -- Diagonal -- Extra -- Extra²\n{}  {}   {}       {}    {}",
             if *sel == 0 {
                 Colorize::underline("GO BACK").bright_blue()
             } else {
@@ -181,7 +192,7 @@ fn display_menu(
         );
     } else if *mode == 2 {
         println!(
-            "Pixel Clustering Format 3000\n\n{}    {}    {}",
+            "Pixel Clustering Format 3000\nby Horace Hoff\n\n{}    {}    {}",
             if *sel == 0 {
                 Colorize::underline("Choose file").bright_blue()
             } else {
@@ -200,7 +211,7 @@ fn display_menu(
         );
     } else if *mode == 1 {
         println!(
-            "Pixel Clustering Format 3000\n\n{}    {}    {} {}    {}",
+            "Pixel Clustering Format 3000\nby Horace Hoff\n\n{}    {}    {} {}    {}",
             if *sel == 0 {
                 Colorize::underline("Choose file").bright_blue()
             } else {
@@ -246,7 +257,7 @@ fn display_menu(
         );
     } else if *mode == 0 {
         println!(
-            "Pixel Clustering Format 3000\n\n{}           {}",
+            "Pixel Clustering Format 3000\nby Horace Hoff\n\n{}       {}       {}",
             if *sel == 0 {
                 Colorize::underline("Encode").bright_blue()
             } else {
@@ -256,6 +267,11 @@ fn display_menu(
                 Colorize::underline("Decode").bright_blue()
             } else {
                 Colorize::white("Decode")
+            },
+            if *sel == 2 {
+                Colorize::underline("QUIT").bright_blue()
+            } else {
+                Colorize::white("QUIT")
             }
         );
     }
@@ -334,7 +350,7 @@ fn main() {
                                 &mut extra_radius,
                                 &mut extra_extra_radius
                             );
-                        } else if event.code == KeyCode::Esc || event.code == KeyCode::Char('q') {
+                        } else if event.code == KeyCode::Esc || event.code == KeyCode::Char('q') || (event.modifiers == KeyModifiers::CONTROL && (event.code == KeyCode::Char('c') || event.code == KeyCode::Char('z'))) {
                             disable_raw_mode().unwrap();
                             return;
                         }
