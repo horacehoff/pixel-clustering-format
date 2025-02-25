@@ -98,11 +98,6 @@ fn find_closest_palette_color(
     extra_radius: bool,
     extra_extra_radius: bool,
 ) -> Rgba<u8> {
-    // let mut base_radius: bool = true;
-    // let mut extra_radius: bool = false;
-    // let mut extra_extra_radius: bool = false;
-    // let mut diagonal_pixels: bool = false;
-
     let mut pixels = Vec::new();
     if x > 0 && y > 0 && diagonal_pixels {
         pixels.push((x - 1, y - 1));

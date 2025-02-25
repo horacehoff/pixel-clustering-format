@@ -120,11 +120,8 @@ fn display_menu(
             .to_str()
             .unwrap()
             .to_string();
-    } else if *mode == 1 && enter && if *selected_lossy {
-        *sel == 3
-    } else {
-        *sel == 2
-    } {
+    } else if *mode == 1 && enter && *sel == 3 {
+        // println!("CONDITIONS ARE FULFILLED!");
         disable_raw_mode().unwrap();
         let name = std::path::Path::new(selected_file_path)
             .file_name()
@@ -163,7 +160,7 @@ fn display_menu(
     }
     if *mode == 3 {
         println!(
-            "Pixel Clustering Format 3000 -- Lossy Settings\nby Horace Hoff\nNOTE: These settings control the range of the palette used by the dithering algorithm on a per-pixel basis.\n      The more options enabled, the better the image will look, but the bigger it will be.\n      Try different settings combinations, there usually isn't a one-size-fits-all solution.\n\n         Base -- Diagonal -- Extra -- Extra²\n{}  {}   {}       {}    {}",
+            "Pixel Clustering Format 3000 -- Lossy Settings\nby Horace Hoff\nNOTE: These settings control the range of the palette used by the dithering algorithm on a per-pixel basis.\n      The more options enabled, the better the image will look, but the bigger it will be.\n      Try different settings combinations, there usually isn't a one-size-fits-all solution.\n\n         Base -- Diagonal -- Extra -- Extra-Extra\n{}  {}   {}       {}    {}",
             if *sel == 0 {
                 Colorize::underline("GO BACK").bright_blue()
             } else {
