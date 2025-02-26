@@ -12,6 +12,9 @@ use colored::{ColoredString, Colorize};
 use crossterm::event::{poll, read, Event, KeyCode, KeyEventKind, KeyModifiers, ModifierKeyCode};
 use crossterm::style::Stylize;
 use crossterm::terminal::disable_raw_mode;
+use iced::widget::{button, column, container, row, text, Column, Row, Themer};
+use iced::{Fill, Element, Theme, Size};
+use iced::overlay::menu::State;
 use rfd::FileDialog;
 
 fn display_menu(
@@ -356,10 +359,49 @@ fn tui() {
     }
 }
 
+
+fn gui() {
+    iced::application("Pixel Clustering Format", update, view)
+        .theme(|_| Theme::Nightfly)
+        .window_size(Size{ width: 350.0, height: 400.0 })
+        .run();
+}
+
+#[derive(Debug, Clone)]
+enum Message {
+    Increment,
+}
+
+fn update(value: &mut u64, message: Message) {
+    match message {
+        Message::Increment => *value += 1,
+    }
+}
+
+fn view(value: &u64) -> Element<Message> {
+    container(row![
+        button("Convert").style(|theme: &Theme, status| {
+        let palette = theme.extended_palette();
+
+        match status {
+            button::Status::Active => {
+                button::Style::default()
+                   .with_background(palette.success.strong.color)
+            }
+            _ => button::primary(theme, status),
+        }
+    }),
+        button("Decode"),
+    ]).center_x(Fill).into()
+}
+
+
 fn main() {
     let args: Vec<String> = env::args().collect();
     if args.len() == 1 {
-        tui();
+        // tui();
+        gui();
+
     } else if args.contains(&"--decode".to_string()) {
         decode(
             args[1].clone(),
