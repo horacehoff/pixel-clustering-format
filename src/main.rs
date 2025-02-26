@@ -275,86 +275,91 @@ fn display_menu(
     crossterm::terminal::enable_raw_mode().unwrap();
 }
 
+
+fn tui() {
+    let mut mode: u8 = 0;
+    let mut sel: u8 = 0;
+    let mut selected_lossy = false;
+    let mut selected_file_path = String::new();
+    let mut base_radius = false;
+    let mut diagonal_pixels = false;
+    let mut extra_radius = false;
+    let mut extra_extra_radius = false;
+    display_menu(
+        false,
+        false,
+        false,
+        &mut mode,
+        &mut sel,
+        &mut selected_lossy,
+        &mut selected_file_path,
+        &mut base_radius,
+        &mut diagonal_pixels,
+        &mut extra_radius,
+        &mut extra_extra_radius
+    );
+    crossterm::terminal::enable_raw_mode().unwrap();
+    loop {
+        if poll(Duration::from_millis(100)).unwrap() {
+            if let Event::Key(event) = read().unwrap() {
+                if event.kind == KeyEventKind::Press {
+                    if event.code == KeyCode::Left {
+                        display_menu(
+                            true,
+                            false,
+                            false,
+                            &mut mode,
+                            &mut sel,
+                            &mut selected_lossy,
+                            &mut selected_file_path,
+                            &mut base_radius,
+                            &mut diagonal_pixels,
+                            &mut extra_radius,
+                            &mut extra_extra_radius
+                        );
+                    } else if event.code == KeyCode::Right {
+                        display_menu(
+                            false,
+                            true,
+                            false,
+                            &mut mode,
+                            &mut sel,
+                            &mut selected_lossy,
+                            &mut selected_file_path,
+                            &mut base_radius,
+                            &mut diagonal_pixels,
+                            &mut extra_radius,
+                            &mut extra_extra_radius
+                        );
+                    } else if event.code == KeyCode::Enter {
+                        display_menu(
+                            false,
+                            false,
+                            true,
+                            &mut mode,
+                            &mut sel,
+                            &mut selected_lossy,
+                            &mut selected_file_path,
+                            &mut base_radius,
+                            &mut diagonal_pixels,
+                            &mut extra_radius,
+                            &mut extra_extra_radius
+                        );
+                    } else if event.code == KeyCode::Esc || event.code == KeyCode::Char('q') || (event.modifiers == KeyModifiers::CONTROL && (event.code == KeyCode::Char('c') || event.code == KeyCode::Char('z'))) {
+                        disable_raw_mode().unwrap();
+                        exit(0);
+                    }
+                }
+
+            }
+        }
+    }
+}
+
 fn main() {
     let args: Vec<String> = env::args().collect();
     if args.len() == 1 {
-        let mut mode: u8 = 0;
-        let mut sel: u8 = 0;
-        let mut selected_lossy = false;
-        let mut selected_file_path = String::new();
-        let mut base_radius = false;
-        let mut diagonal_pixels = false;
-        let mut extra_radius = false;
-        let mut extra_extra_radius = false;
-        display_menu(
-            false,
-            false,
-            false,
-            &mut mode,
-            &mut sel,
-            &mut selected_lossy,
-            &mut selected_file_path,
-            &mut base_radius,
-            &mut diagonal_pixels,
-            &mut extra_radius,
-            &mut extra_extra_radius
-        );
-        crossterm::terminal::enable_raw_mode().unwrap();
-        loop {
-            if poll(Duration::from_millis(100)).unwrap() {
-                if let Event::Key(event) = read().unwrap() {
-                    if event.kind == KeyEventKind::Press {
-                        if event.code == KeyCode::Left {
-                            display_menu(
-                                true,
-                                false,
-                                false,
-                                &mut mode,
-                                &mut sel,
-                                &mut selected_lossy,
-                                &mut selected_file_path,
-                                &mut base_radius,
-                                &mut diagonal_pixels,
-                                &mut extra_radius,
-                                &mut extra_extra_radius
-                            );
-                        } else if event.code == KeyCode::Right {
-                            display_menu(
-                                false,
-                                true,
-                                false,
-                                &mut mode,
-                                &mut sel,
-                                &mut selected_lossy,
-                                &mut selected_file_path,
-                                &mut base_radius,
-                                &mut diagonal_pixels,
-                                &mut extra_radius,
-                                &mut extra_extra_radius
-                            );
-                        } else if event.code == KeyCode::Enter {
-                            display_menu(
-                                false,
-                                false,
-                                true,
-                                &mut mode,
-                                &mut sel,
-                                &mut selected_lossy,
-                                &mut selected_file_path,
-                                &mut base_radius,
-                                &mut diagonal_pixels,
-                                &mut extra_radius,
-                                &mut extra_extra_radius
-                            );
-                        } else if event.code == KeyCode::Esc || event.code == KeyCode::Char('q') || (event.modifiers == KeyModifiers::CONTROL && (event.code == KeyCode::Char('c') || event.code == KeyCode::Char('z'))) {
-                            disable_raw_mode().unwrap();
-                            return;
-                        }
-                    }
-
-                }
-            }
-        }
+        tui();
     } else if args.contains(&"--decode".to_string()) {
         decode(
             args[1].clone(),
