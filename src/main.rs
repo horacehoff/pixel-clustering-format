@@ -9,12 +9,12 @@ mod encode;
 use crate::decode::decode;
 use crate::encode::convert;
 use colored::{ColoredString, Colorize};
-use crossterm::event::{poll, read, Event, KeyCode, KeyEventKind, KeyModifiers, ModifierKeyCode};
+use crossterm::event::{poll, read, Event, KeyCode, KeyEventKind, KeyModifiers};
 use crossterm::style::Stylize;
 use crossterm::terminal::disable_raw_mode;
-use iced::widget::{button, column, container, row, text, Column, Row, Themer};
-use iced::{Fill, Element, Theme, Size};
-use iced::overlay::menu::State;
+use iced::alignment::Horizontal;
+use iced::widget::{button, column, container, row, text, toggler};
+use iced::{Element, Fill, Size};
 use rfd::FileDialog;
 
 fn display_menu(
@@ -362,37 +362,108 @@ fn tui() {
 
 fn gui() {
     iced::application("Pixel Clustering Format", update, view)
-        .theme(|_| Theme::Nightfly)
+        // .theme(|_| Theme::Nightfly)
         .window_size(Size{ width: 350.0, height: 400.0 })
-        .run();
+        .run().unwrap();
 }
 
 #[derive(Debug, Clone)]
-enum Message {
-    Increment,
+enum Command {
+    SwitchFirst,
+    SwitchSecond,
+    ToggleLossy,
+    ToggleBase,
+    ToggleDiagonal,
+    ToggleExtra,
+    ToggleExtraExtra,
+    SetFile,
+    Convert
 }
 
-fn update(value: &mut u64, message: Message) {
-    match message {
-        Message::Increment => *value += 1,
+#[derive(Default)]
+struct Data {
+    mode: u8,
+    is_lossy: bool,
+    open_settings: bool,
+    base_radius: bool,
+    diagonal_pixels: bool,
+    extra_pixels: bool,
+    extra_extra_pixels: bool,
+    selected_file: String,
+}
+
+fn update(data: &mut Data, command: Command) {
+    match command {
+        Command::SwitchFirst => {
+            data.mode = 0;
+        }
+        Command::SwitchSecond => {
+            data.mode = 1;
+        }
+        Command::ToggleLossy => {
+            data.is_lossy = !data.is_lossy;
+        }
+        Command::ToggleBase => {
+            data.base_radius = !data.base_radius;
+        }
+        Command::ToggleDiagonal => {
+            data.diagonal_pixels = !data.diagonal_pixels;
+        }
+        Command::ToggleExtra => {
+            data.extra_pixels = !data.extra_pixels;
+        }
+        Command::ToggleExtraExtra => {
+            data.extra_extra_pixels = !data.extra_extra_pixels;
+        }
+        Command::SetFile => {
+            data.selected_file = FileDialog::new()
+                .pick_file()
+                .unwrap_or("".parse().unwrap())
+                .to_str()
+                .unwrap_or("")
+                .to_string();
+        }
+        Command::Convert => {}
     }
 }
 
-fn view(value: &u64) -> Element<Message> {
-    container(row![
-        button("Convert").style(|theme: &Theme, status| {
-        let palette = theme.extended_palette();
-
-        match status {
-            button::Status::Active => {
-                button::Style::default()
-                   .with_background(palette.success.strong.color)
-            }
-            _ => button::primary(theme, status),
-        }
-    }),
-        button("Decode"),
-    ]).center_x(Fill).into()
+fn view(data: &Data) -> Element<Command> {
+    container(
+        column![
+            text("Pixel Clustering Format"),
+        row![
+        button("Convert").style(button::primary).on_press(Command::SwitchFirst),
+        button("Decode").on_press(Command::SwitchSecond),
+    ],
+      if data.mode == 0 {
+          column![
+              button("Pick file").on_press(Command::SetFile),
+                toggler(data.is_lossy).label("Lossy Compression")
+                .on_toggle(|_| Command::ToggleLossy)
+                    ,
+                if data.is_lossy {
+                    column![
+                            text("These settings dictate which pixels are used to generate the palette of available colors, for each pixel of the image. Some combinations of these options will give better results depending on the chosen image. Please note that the more options are enabled, the better the image will look, but the file size will in turn potentially be higher."),
+                        toggler(data.base_radius).label("Base pixels")
+                            .on_toggle(|_| Command::ToggleBase),
+                        toggler(data.diagonal_pixels).label("Diagonal pixels")
+                            .on_toggle(|_| Command::ToggleDiagonal),
+                        toggler(data.extra_pixels).label("Extra pixels")
+                            .on_toggle(|_| Command::ToggleExtra),
+                        toggler(data.extra_extra_pixels).label("Extra Extra pixels")
+                            .on_toggle(|_| Command::ToggleExtraExtra)
+                    ].align_x(Horizontal::Left)
+                } else {
+                     column![]
+                },
+                button("Convert!").on_press(Command::Convert)
+         ].align_x(Horizontal::Center)
+      } else {
+          column![
+              button("Pick file")
+          ]
+      }].align_x(Horizontal::Center)
+    ).center_x(Fill).into()
 }
 
 

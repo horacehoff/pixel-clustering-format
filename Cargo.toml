@@ -19,6 +19,9 @@ clearscreen = "4.0.1"
 kdam = "0.6.2"
 iced = "0.13.1"
 
+[profile.dev]
+codegen-units = 512
+
 [profile.release]
 opt-level = 3
 lto = "fat"
