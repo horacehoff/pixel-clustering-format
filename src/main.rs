@@ -1,6 +1,6 @@
-use std::env;
 use std::process::exit;
 use std::time::Duration;
+use std::env;
 
 mod data;
 mod decode;
@@ -13,8 +13,9 @@ use crossterm::event::{poll, read, Event, KeyCode, KeyEventKind, KeyModifiers};
 use crossterm::style::Stylize;
 use crossterm::terminal::disable_raw_mode;
 use iced::alignment::Horizontal;
+use iced::widget::button::Status;
 use iced::widget::{button, column, container, row, text, toggler};
-use iced::{Element, Fill, Size};
+use iced::{Element, Fill, Size, Theme};
 use rfd::FileDialog;
 
 fn display_menu(
@@ -118,24 +119,13 @@ fn display_menu(
         *selected_lossy = !*selected_lossy
     } else if (*mode == 1 || *mode == 2) && enter && *sel == 0 {
         *selected_file_path = FileDialog::new()
-            .add_filter("image",
-                        &[
-                            "avif",
-                            "bmp",
-                            "ff",
-                            "gif",
-                            "hdr",
-                            "ico",
-                            "jpeg",
-                            "jpg",
-                            "exr",
-                            "png",
-                            "pnm",
-                            "qoi",
-                            "tga",
-                            "tif",
-                            "webp"
-                        ])
+            .add_filter(
+                "image",
+                &[
+                    "avif", "bmp", "ff", "gif", "hdr", "ico", "jpeg", "jpg", "exr", "png", "pnm",
+                    "qoi", "tga", "tif", "webp",
+                ],
+            )
             .pick_file()
             .unwrap()
             .to_str()
@@ -254,7 +244,7 @@ fn display_menu(
             },
             if *selected_lossy {
                 if *sel == 2 {
-                    format!("{}   ",Colorize::underline("Settings").bright_blue())
+                    format!("{}   ", Colorize::underline("Settings").bright_blue())
                 } else {
                     "Settings   ".parse().unwrap()
                 }
@@ -296,7 +286,6 @@ fn display_menu(
     crossterm::terminal::enable_raw_mode().unwrap();
 }
 
-
 fn tui() {
     let mut mode: u8 = 0;
     let mut sel: u8 = 0;
@@ -317,7 +306,7 @@ fn tui() {
         &mut base_radius,
         &mut diagonal_pixels,
         &mut extra_radius,
-        &mut extra_extra_radius
+        &mut extra_extra_radius,
     );
     crossterm::terminal::enable_raw_mode().unwrap();
     loop {
@@ -336,7 +325,7 @@ fn tui() {
                             &mut base_radius,
                             &mut diagonal_pixels,
                             &mut extra_radius,
-                            &mut extra_extra_radius
+                            &mut extra_extra_radius,
                         );
                     } else if event.code == KeyCode::Right {
                         display_menu(
@@ -350,7 +339,7 @@ fn tui() {
                             &mut base_radius,
                             &mut diagonal_pixels,
                             &mut extra_radius,
-                            &mut extra_extra_radius
+                            &mut extra_extra_radius,
                         );
                     } else if event.code == KeyCode::Enter {
                         display_menu(
@@ -364,25 +353,32 @@ fn tui() {
                             &mut base_radius,
                             &mut diagonal_pixels,
                             &mut extra_radius,
-                            &mut extra_extra_radius
+                            &mut extra_extra_radius,
                         );
-                    } else if event.code == KeyCode::Esc || event.code == KeyCode::Char('q') || (event.modifiers == KeyModifiers::CONTROL && (event.code == KeyCode::Char('c') || event.code == KeyCode::Char('z'))) {
+                    } else if event.code == KeyCode::Esc
+                        || event.code == KeyCode::Char('q')
+                        || (event.modifiers == KeyModifiers::CONTROL
+                        && (event.code == KeyCode::Char('c')
+                        || event.code == KeyCode::Char('z')))
+                    {
                         disable_raw_mode().unwrap();
                         exit(0);
                     }
                 }
-
             }
         }
     }
 }
 
-
 fn gui() {
     iced::application("Pixel Clustering Format", update, view)
         // .theme(|_| Theme::Nightfly)
-        .window_size(Size{ width: 350.0, height: 400.0 })
-        .run().unwrap();
+        .window_size(Size {
+            width: 350.0,
+            height: 400.0,
+        })
+        .run()
+        .unwrap();
 }
 
 #[derive(Debug, Clone)]
@@ -395,7 +391,7 @@ enum Command {
     ToggleExtra,
     ToggleExtraExtra,
     SetFile,
-    Convert
+    Convert,
 }
 
 #[derive(Default)]
@@ -408,6 +404,7 @@ struct Data {
     extra_pixels: bool,
     extra_extra_pixels: bool,
     selected_file: String,
+    is_converting: bool,
 }
 
 fn update(data: &mut Data, command: Command) {
@@ -435,31 +432,48 @@ fn update(data: &mut Data, command: Command) {
         }
         Command::SetFile => {
             data.selected_file = FileDialog::new()
-                .add_filter("image",
-                            &[
-                                "avif",
-                                "bmp",
-                                "ff",
-                                "gif",
-                                "hdr",
-                                "ico",
-                                "jpeg",
-                                "jpg",
-                                "exr",
-                                "png",
-                                "pnm",
-                                "qoi",
-                                "tga",
-                                "tif",
-                                "webp"
-                            ])
+                .add_filter(
+                    "image",
+                    &[
+                        "avif", "bmp", "ff", "gif", "hdr", "ico", "jpeg", "jpg", "exr", "png",
+                        "pnm", "qoi", "tga", "tif", "webp",
+                    ],
+                )
                 .pick_file()
                 .unwrap_or("".parse().unwrap())
                 .to_str()
                 .unwrap_or("")
                 .to_string();
         }
-        Command::Convert => {}
+        Command::Convert => {
+            let name = std::path::Path::new(&data.selected_file)
+                .file_name()
+                .unwrap()
+                .to_str()
+                .unwrap()
+                .split(".")
+                .collect::<Vec<&str>>()[0]
+                .to_string();
+            data.is_converting = true;
+            //thread::sleep(time::Duration::from_millis(100));
+            convert(
+                &data.selected_file,
+                &(name.to_string() + ".pcf"),
+                false,
+                data.is_lossy,
+                true,
+                false,
+                false,
+                false,
+            );
+            data.is_converting = false;
+            let output_file = FileDialog::new()
+                .set_file_name("output.png")
+                .save_file()
+                .unwrap();
+            std::fs::copy(std::path::Path::new(&(name.to_string() + ".pcf")), output_file).unwrap();
+            std::fs::remove_file(std::path::Path::new(&(name + ".pcf"))).unwrap();
+        }
     }
 }
 
@@ -492,7 +506,7 @@ fn view(data: &Data) -> Element<Command> {
                 } else {
                      column![]
                 },
-                button("Convert!").on_press(Command::Convert)
+                button(if data.is_converting {"Converting..."} else {"Convert!"} ).on_press(Command::Convert).style(|theme: &Theme, status|{button::primary(theme, if data.selected_file.is_empty() {Status::Disabled} else {status})})
          ].align_x(Horizontal::Center)
       } else {
           column![
@@ -502,13 +516,11 @@ fn view(data: &Data) -> Element<Command> {
     ).center_x(Fill).into()
 }
 
-
 fn main() {
     let args: Vec<String> = env::args().collect();
     if args.len() == 1 {
         // tui();
         gui();
-
     } else if args.contains(&"--decode".to_string()) {
         decode(
             args[1].clone(),

@@ -1,10 +1,10 @@
 use colored::Colorize;
 use const_currying::const_currying;
 use image::RgbaImage;
+use kdam::tqdm;
 use mashi_core::Decoder;
 use std::fs::File;
 use std::io::Read;
-use kdam::tqdm;
 
 pub fn expand_math(s: String) -> String {
     let parts: Vec<String> = s.split('+').map(|x| x.to_string()).collect();

@@ -4,12 +4,12 @@ use const_currying::const_currying;
 use crossterm::style::Stylize;
 use hex_color::HexColor;
 use image::{open, Pixel, Rgba, RgbaImage};
+use kdam::tqdm;
 use mashi_core::Encoder;
 use rayon::prelude::ParallelSliceMut;
 use std::fs;
 use std::fs::File;
 use std::io::Write;
-use kdam::tqdm;
 
 fn optimize_math_str(input: String) -> String {
     let mut nums: Vec<&str> = input.split('+').filter(|s| !s.is_empty()).collect();
