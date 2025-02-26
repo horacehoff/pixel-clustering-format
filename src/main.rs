@@ -118,6 +118,24 @@ fn display_menu(
         *selected_lossy = !*selected_lossy
     } else if (*mode == 1 || *mode == 2) && enter && *sel == 0 {
         *selected_file_path = FileDialog::new()
+            .add_filter("image",
+                        &[
+                            "avif",
+                            "bmp",
+                            "ff",
+                            "gif",
+                            "hdr",
+                            "ico",
+                            "jpeg",
+                            "jpg",
+                            "exr",
+                            "png",
+                            "pnm",
+                            "qoi",
+                            "tga",
+                            "tif",
+                            "webp"
+                        ])
             .pick_file()
             .unwrap()
             .to_str()
@@ -417,6 +435,24 @@ fn update(data: &mut Data, command: Command) {
         }
         Command::SetFile => {
             data.selected_file = FileDialog::new()
+                .add_filter("image",
+                            &[
+                                "avif",
+                                "bmp",
+                                "ff",
+                                "gif",
+                                "hdr",
+                                "ico",
+                                "jpeg",
+                                "jpg",
+                                "exr",
+                                "png",
+                                "pnm",
+                                "qoi",
+                                "tga",
+                                "tif",
+                                "webp"
+                            ])
                 .pick_file()
                 .unwrap_or("".parse().unwrap())
                 .to_str()
