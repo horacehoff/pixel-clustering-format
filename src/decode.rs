@@ -1,10 +1,10 @@
 use colored::Colorize;
 use const_currying::const_currying;
 use image::RgbaImage;
-use linya::{Bar, Progress};
 use mashi_core::Decoder;
 use std::fs::File;
 use std::io::Read;
+use kdam::tqdm;
 
 pub fn expand_math(s: String) -> String {
     let parts: Vec<String> = s.split('+').map(|x| x.to_string()).collect();
@@ -100,9 +100,7 @@ pub fn decode(
 
     let mut colors: Vec<String> = colors.remove(0).split("#").map(|x| x.to_string()).collect();
     colors.retain(|x| !x.is_empty());
-    let mut progress = Progress::new();
-    let bar: Bar = progress.bar(colors.len(), "Decoding");
-    for x in colors.iter_mut() {
+    for x in tqdm!(colors.iter_mut()) {
         let mut is_y = false;
         if x.ends_with("y") {
             is_y = true;
@@ -173,9 +171,6 @@ pub fn decode(
                     }
                 }
             }
-        }
-        if verbose {
-            progress.inc_and_draw(&bar, 1);
         }
     }
 

@@ -4,12 +4,12 @@ use const_currying::const_currying;
 use crossterm::style::Stylize;
 use hex_color::HexColor;
 use image::{open, Pixel, Rgba, RgbaImage};
-use linya::{Bar, Progress};
 use mashi_core::Encoder;
 use rayon::prelude::ParallelSliceMut;
 use std::fs;
 use std::fs::File;
 use std::io::Write;
+use kdam::tqdm;
 
 fn optimize_math_str(input: String) -> String {
     let mut nums: Vec<&str> = input.split('+').filter(|s| !s.is_empty()).collect();
@@ -297,10 +297,8 @@ pub fn convert(
     let pixels = image.pixels();
 
     // put the pixels in a hashmap
-    let mut progress = Progress::new();
-    let bar: Bar = progress.bar(pixels.len(), "Registering pixels");
     let mut px_colors: HashMap<String, Vec<(u32, u32)>> = Default::default();
-    for w in pixels {
+    for w in tqdm!(pixels) {
         let colors = w.channels();
         let color = optimize_hex_color(
             HexColor::rgba(colors[0], colors[1], colors[2], colors[3])
@@ -315,9 +313,6 @@ pub fn convert(
         } else {
             x += 1;
         }
-        if verbose {
-            progress.inc_and_draw(&bar, 1);
-        }
     }
     // remove dominant color
     let bg_color = px_colors
@@ -330,13 +325,12 @@ pub fn convert(
 
     let mut outputf: String = format!("{width}%{height}%{bg_color}%");
 
-    let mut progress = Progress::new();
-    let bar: Bar = progress.bar(px_colors.len(), "Converting");
-    for (color, pixels) in px_colors {
+
+    for (color, pixels) in tqdm!(px_colors.iter()) {
         let mut grouped_coords: HashMap<String, Vec<u32>> = Default::default();
         let mut y_coords: HashMap<String, Vec<u32>> = Default::default();
         let mut is_y = false;
-        for pixel in &pixels {
+        for pixel in pixels {
             // group by abscissa
             let key = format!("{}", pixel.0);
             if !grouped_coords.contains_key(&key) {
@@ -371,9 +365,6 @@ pub fn convert(
             }
             sequenced = sequenced.replace("\"", "").replace("\\", "");
             outputf.push_str(&sequenced);
-        }
-        if verbose {
-            progress.inc_and_draw(&bar, 1);
         }
     }
 
