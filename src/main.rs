@@ -385,6 +385,9 @@ fn gui() {
     eframe::run_simple_native("Pixel Clustering Format", options, move |ctx, _frame| {
         ctx.set_zoom_factor(1.1);
         egui::CentralPanel::default().show(ctx, |ui| {
+            ui.label("Pixel Clustering Format");
+            ui.label("by Horace Hoff");
+            ui.hyperlink_to("GitHub", "https://github.com/horacehoff/pixel-clustering-format");
             ui.horizontal_top(|ui| {
                 ui.selectable_value(&mut mode, Modes::Encode, "Encode");
                 ui.selectable_value(&mut mode, Modes::Decode, "Decode");
