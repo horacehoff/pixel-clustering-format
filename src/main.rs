@@ -418,12 +418,31 @@ fn gui() {
                             ui.checkbox(&mut extra_extra_pixels, "Extra-Extra pixels");
                         });
                     }
-                    ui.button("Start");
+                    if ui.add_enabled(!selected_file_path.is_empty(),egui::Button::new("Start")).clicked() {
+                        let mut output_file = FileDialog::new()
+                            .set_file_name("output.pcf")
+                            .save_file()
+                            .unwrap();
+                        convert(
+                            &selected_file_path,
+                            output_file.to_str().unwrap(),
+                            false,
+                            is_lossy,
+                            base_pixels,
+                            diagonal_pixels,
+                            extra_pixels,
+                            extra_extra_pixels,
+                        );
+                        output_file.pop();
+                        open_file_explorer(output_file.to_str()
+                            .unwrap()
+                            .to_string());
+                    };
                 })
             } else {
                 ui.group(|ui| {
                     if ui.button("Pick File").clicked() {
-                        selected_file_path = FileDialog::new()
+                        selected_decode_file_path = FileDialog::new()
                             .add_filter(
                                 "image",
                                 &[
@@ -436,7 +455,20 @@ fn gui() {
                             .unwrap_or_default()
                             .to_string();
                     }
-                    ui.button("Start");
+                    if ui.add_enabled(!selected_decode_file_path.is_empty(),egui::Button::new("Start")).clicked() {
+                        let mut output_file = FileDialog::new()
+                            .set_file_name("output.png")
+                            .save_file()
+                            .unwrap();
+                        clearscreen::clear().unwrap();
+                        decode(selected_decode_file_path.to_string(), output_file.to_str()
+                            .unwrap()
+                            .to_string(), true);
+                        output_file.pop();
+                        open_file_explorer(output_file.to_str()
+                            .unwrap()
+                            .to_string());
+                    };
                 })
             }
         });
