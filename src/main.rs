@@ -12,10 +12,6 @@ use colored::{ColoredString, Colorize};
 use crossterm::event::{poll, read, Event, KeyCode, KeyEventKind, KeyModifiers};
 use crossterm::style::Stylize;
 use crossterm::terminal::disable_raw_mode;
-use iced::alignment::Horizontal;
-use iced::widget::button::Status;
-use iced::widget::{button, column, container, row, text, toggler};
-use iced::{Element, Fill, Font, Size, Theme};
 use rfd::FileDialog;
 
 fn display_menu(
@@ -374,23 +370,75 @@ fn tui() {
 }
 
 fn gui() {
-    let mut name = "Arthur".to_owned();
-    let mut age = 42;
+    #[derive(PartialEq)]
+    enum Modes { Encode, Decode }
+    let mut mode = Modes::Encode;
+    let mut selected_file_path = String::new();
+    let mut selected_decode_file_path = String::new();
+    let mut is_lossy = false;
+    let mut base_pixels = false;
+    let mut diagonal_pixels = false;
+    let mut extra_pixels = false;
+    let mut extra_extra_pixels = false;
 
     let options = eframe::NativeOptions::default();
-    eframe::run_simple_native("My egui App", options, move |ctx, _frame| {
+    eframe::run_simple_native("Pixel Clustering Format", options, move |ctx, _frame| {
+        ctx.set_zoom_factor(1.1);
         egui::CentralPanel::default().show(ctx, |ui| {
-            ui.heading("My egui Application");
-            ui.horizontal(|ui| {
-                let name_label = ui.label("Your name: ");
-                ui.text_edit_singleline(&mut name)
-                    .labelled_by(name_label.id);
+            ui.horizontal_top(|ui| {
+                ui.selectable_value(&mut mode, Modes::Encode, "Encode");
+                ui.selectable_value(&mut mode, Modes::Decode, "Decode");
             });
-            ui.add(egui::Slider::new(&mut age, 0..=120).text("age"));
-            if ui.button("Increment").clicked() {
-                age += 1;
+            if mode == Modes::Encode {
+                ui.group(|ui| {
+                    if ui.button("Pick File").clicked() {
+                        selected_file_path = FileDialog::new()
+                            .add_filter(
+                                "image",
+                                &[
+                                    "avif", "bmp", "ff", "gif", "hdr", "ico", "jpeg", "jpg", "exr", "png", "pnm",
+                                    "qoi", "tga", "tif", "webp",
+                                ],
+                            )
+                            .pick_file()
+                            .unwrap_or_default()
+                            .to_str()
+                            .unwrap_or_default()
+                            .to_string();
+                    }
+                    ui.checkbox(&mut is_lossy, "Lossy Compression");
+                    if is_lossy {
+                        ui.collapsing("Lossy Compression Settings", |ui| {
+                            ui.label("These settings control the range of the palette used by the dithering algorithm on a per-pixel basis.");
+                            ui.label("The more options enabled, the better the image will look, but the bigger it will be.");
+                            ui.label("Try different settings combinations, there usually isn't a one-size-fits-all solution.");
+                            ui.checkbox(&mut base_pixels, "Base pixels");
+                            ui.checkbox(&mut diagonal_pixels, "Diagonal pixels");
+                            ui.checkbox(&mut extra_pixels, "Extra pixels");
+                            ui.checkbox(&mut extra_extra_pixels, "Extra-Extra pixels");
+                        });
+                    }
+                    ui.button("Start");
+                })
+            } else {
+                ui.group(|ui| {
+                    if ui.button("Pick File").clicked() {
+                        selected_file_path = FileDialog::new()
+                            .add_filter(
+                                "image",
+                                &[
+                                    "pcf",
+                                ],
+                            )
+                            .pick_file()
+                            .unwrap_or_default()
+                            .to_str()
+                            .unwrap_or_default()
+                            .to_string();
+                    }
+                    ui.button("Start");
+                })
             }
-            ui.label(format!("Hello '{name}', age {age}"));
         });
     }).unwrap();
 }
