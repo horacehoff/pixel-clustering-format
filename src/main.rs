@@ -519,7 +519,7 @@ fn update(data: &mut Data, command: Command) {
 fn view(data: &Data) -> Element<Command> {
     container(
         column![
-            text("Pixel Clustering Format"),
+            text("Pixel Clustering Format - Horace Hoff"),
         row![
         button("Convert").style(button::primary).on_press(Command::SwitchFirst),
         button("Decode").on_press(Command::SwitchSecond),
