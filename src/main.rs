@@ -1,6 +1,6 @@
+use std::env;
 use std::process::exit;
 use std::time::Duration;
-use std::env;
 
 mod data;
 mod decode;
@@ -391,7 +391,9 @@ enum Command {
     ToggleExtra,
     ToggleExtraExtra,
     SetFile,
+    SetDecodeFile,
     Convert,
+    Decode,
 }
 
 #[derive(Default)]
@@ -404,7 +406,21 @@ struct Data {
     extra_pixels: bool,
     extra_extra_pixels: bool,
     selected_file: String,
-    is_converting: bool,
+    selected_decode_file:String,
+}
+
+fn open_file_explorer(path: String) {
+    if cfg!(windows) {
+        std::process::Command::new("explorer")
+            .arg(path)
+            .spawn()
+            .unwrap();
+    } else {
+        std::process::Command::new("open")
+            .arg(path)
+            .spawn()
+            .unwrap();
+    }
 }
 
 fn update(data: &mut Data, command: Command) {
@@ -444,6 +460,20 @@ fn update(data: &mut Data, command: Command) {
                 .to_str()
                 .unwrap_or("")
                 .to_string();
+        },
+        Command::SetDecodeFile => {
+            data.selected_decode_file = FileDialog::new()
+                .add_filter(
+                    "image",
+                    &[
+                        "pcf",
+                    ],
+                )
+                .pick_file()
+                .unwrap_or("".parse().unwrap())
+                .to_str()
+                .unwrap_or("")
+                .to_string();
         }
         Command::Convert => {
             let name = std::path::Path::new(&data.selected_file)
@@ -454,11 +484,13 @@ fn update(data: &mut Data, command: Command) {
                 .split(".")
                 .collect::<Vec<&str>>()[0]
                 .to_string();
-            data.is_converting = true;
-            //thread::sleep(time::Duration::from_millis(100));
+            let mut output_file = FileDialog::new()
+                .set_file_name("output.pcf")
+                .save_file()
+                .unwrap();
             convert(
                 &data.selected_file,
-                &(name.to_string() + ".pcf"),
+                output_file.to_str().unwrap(),
                 false,
                 data.is_lossy,
                 true,
@@ -466,13 +498,26 @@ fn update(data: &mut Data, command: Command) {
                 false,
                 false,
             );
-            data.is_converting = false;
-            let output_file = FileDialog::new()
+            // std::fs::copy(std::path::Path::new(&(name.to_string() + ".pcf")), output_file.clone()).unwrap();
+            // std::fs::remove_file(std::path::Path::new(&(name + ".pcf"))).unwrap();
+            output_file.pop();
+            open_file_explorer(output_file.to_str()
+                .unwrap()
+                .to_string());
+        }
+        Command::Decode => {
+            let mut output_file = FileDialog::new()
                 .set_file_name("output.png")
                 .save_file()
                 .unwrap();
-            std::fs::copy(std::path::Path::new(&(name.to_string() + ".pcf")), output_file).unwrap();
-            std::fs::remove_file(std::path::Path::new(&(name + ".pcf"))).unwrap();
+            clearscreen::clear().unwrap();
+            decode(data.selected_decode_file.to_string(), output_file.to_str()
+                .unwrap()
+                .to_string(), true);
+            output_file.pop();
+            open_file_explorer(output_file.to_str()
+                                   .unwrap()
+                                   .to_string());
         }
     }
 }
@@ -506,11 +551,12 @@ fn view(data: &Data) -> Element<Command> {
                 } else {
                      column![]
                 },
-                button(if data.is_converting {"Converting..."} else {"Convert!"} ).on_press(Command::Convert).style(|theme: &Theme, status|{button::primary(theme, if data.selected_file.is_empty() {Status::Disabled} else {status})})
+                button("Convert!").on_press(Command::Convert).style(|theme: &Theme, status|{button::primary(theme, if data.selected_file.is_empty() {Status::Disabled} else {status})})
          ].align_x(Horizontal::Center)
       } else {
           column![
-              button("Pick file")
+              button("Pick file").on_press(Command::SetDecodeFile),
+              button("Decode").on_press(Command::Decode).style(|theme: &Theme, status|{button::primary(theme, if data.selected_decode_file.is_empty() {Status::Disabled} else {status})})
           ]
       }].align_x(Horizontal::Center)
     ).center_x(Fill).into()
