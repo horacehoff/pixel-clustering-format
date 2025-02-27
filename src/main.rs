@@ -133,36 +133,39 @@ fn display_menu(
             .to_string();
     } else if *mode == 1 && enter && *sel == 3 {
         disable_raw_mode().unwrap();
-        let name = std::path::Path::new(selected_file_path)
-            .file_name()
-            .unwrap()
-            .to_str()
-            .unwrap()
-            .split(".")
-            .collect::<Vec<&str>>()[0]
-            .to_string();
-        clearscreen::clear().unwrap();
+        let mut output_file = FileDialog::new()
+            .set_file_name("output.pcf")
+            .save_file()
+            .unwrap();
         convert(
-            selected_file_path,
-            &(name + ".pcf"),
-            true,
+            &selected_file_path,
+            output_file.to_str().unwrap(),
+            false,
             *selected_lossy,
             *base_radius,
             *diagonal_pixels,
             *extra_radius,
             *extra_extra_radius,
         );
+        output_file.pop();
+        open_file_explorer(output_file.to_str()
+            .unwrap()
+            .to_string());
         exit(0);
     } else if *mode == 2 && enter && *sel == 1 {
-        let output_file = FileDialog::new()
+        disable_raw_mode().unwrap();
+        let mut output_file = FileDialog::new()
             .set_file_name("output.png")
             .save_file()
-            .unwrap()
-            .to_str()
-            .unwrap()
-            .to_string();
+            .unwrap();
         clearscreen::clear().unwrap();
-        decode(selected_file_path.to_string(), output_file, true);
+        decode(selected_file_path.to_string(), output_file.to_str()
+            .unwrap()
+            .to_string(), true);
+        output_file.pop();
+        open_file_explorer(output_file.to_str()
+            .unwrap()
+            .to_string());
         exit(0);
     } else if *mode == 2 && enter && *sel == 2 {
         *mode = 0;
@@ -559,8 +562,7 @@ fn view(data: &Data) -> Element<Command> {
 fn main() {
     let args: Vec<String> = env::args().collect();
     if args.len() == 1 {
-        // tui();
-        gui();
+        tui();
     } else if args.contains(&"--decode".to_string()) {
         decode(
             args[1].clone(),
