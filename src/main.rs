@@ -374,43 +374,27 @@ fn tui() {
 }
 
 fn gui() {
-    iced::application("Pixel Clustering Format", update, view)
-        .theme(|_| Theme::Nightfly)
-        .window_size(Size {
-            width: 350.0,
-            height: 400.0,
-        })
-        .run()
-        .unwrap();
+    let mut name = "Arthur".to_owned();
+    let mut age = 42;
+
+    let options = eframe::NativeOptions::default();
+    eframe::run_simple_native("My egui App", options, move |ctx, _frame| {
+        egui::CentralPanel::default().show(ctx, |ui| {
+            ui.heading("My egui Application");
+            ui.horizontal(|ui| {
+                let name_label = ui.label("Your name: ");
+                ui.text_edit_singleline(&mut name)
+                    .labelled_by(name_label.id);
+            });
+            ui.add(egui::Slider::new(&mut age, 0..=120).text("age"));
+            if ui.button("Increment").clicked() {
+                age += 1;
+            }
+            ui.label(format!("Hello '{name}', age {age}"));
+        });
+    }).unwrap();
 }
 
-#[derive(Debug, Clone)]
-enum Command {
-    SwitchFirst,
-    SwitchSecond,
-    ToggleLossy,
-    ToggleBase,
-    ToggleDiagonal,
-    ToggleExtra,
-    ToggleExtraExtra,
-    SetFile,
-    SetDecodeFile,
-    Convert,
-    Decode,
-}
-
-#[derive(Default)]
-struct Data {
-    mode: u8,
-    is_lossy: bool,
-    open_settings: bool,
-    base_radius: bool,
-    diagonal_pixels: bool,
-    extra_pixels: bool,
-    extra_extra_pixels: bool,
-    selected_file: String,
-    selected_decode_file:String,
-}
 
 fn open_file_explorer(path: String) {
     if cfg!(windows) {
@@ -426,143 +410,11 @@ fn open_file_explorer(path: String) {
     }
 }
 
-fn update(data: &mut Data, command: Command) {
-    match command {
-        Command::SwitchFirst => {
-            data.mode = 0;
-        }
-        Command::SwitchSecond => {
-            data.mode = 1;
-        }
-        Command::ToggleLossy => {
-            data.is_lossy = !data.is_lossy;
-        }
-        Command::ToggleBase => {
-            data.base_radius = !data.base_radius;
-        }
-        Command::ToggleDiagonal => {
-            data.diagonal_pixels = !data.diagonal_pixels;
-        }
-        Command::ToggleExtra => {
-            data.extra_pixels = !data.extra_pixels;
-        }
-        Command::ToggleExtraExtra => {
-            data.extra_extra_pixels = !data.extra_extra_pixels;
-        }
-        Command::SetFile => {
-            data.selected_file = FileDialog::new()
-                .add_filter(
-                    "image",
-                    &[
-                        "avif", "bmp", "ff", "gif", "hdr", "ico", "jpeg", "jpg", "exr", "png",
-                        "pnm", "qoi", "tga", "tif", "webp",
-                    ],
-                )
-                .pick_file()
-                .unwrap_or("".parse().unwrap())
-                .to_str()
-                .unwrap_or("")
-                .to_string();
-        },
-        Command::SetDecodeFile => {
-            data.selected_decode_file = FileDialog::new()
-                .add_filter(
-                    "image",
-                    &[
-                        "pcf",
-                    ],
-                )
-                .pick_file()
-                .unwrap_or("".parse().unwrap())
-                .to_str()
-                .unwrap_or("")
-                .to_string();
-        }
-        Command::Convert => {
-            if !data.selected_file.is_empty() {
-                let mut output_file = FileDialog::new()
-                    .set_file_name("output.pcf")
-                    .save_file()
-                    .unwrap();
-                convert(
-                    &data.selected_file,
-                    output_file.to_str().unwrap(),
-                    false,
-                    data.is_lossy,
-                    true,
-                    false,
-                    false,
-                    false,
-                );
-                output_file.pop();
-                open_file_explorer(output_file.to_str()
-                    .unwrap()
-                    .to_string());
-            }
-        }
-        Command::Decode => {
-            if !data.selected_decode_file.is_empty() {
-                let mut output_file = FileDialog::new()
-                    .set_file_name("output.png")
-                    .save_file()
-                    .unwrap();
-                clearscreen::clear().unwrap();
-                decode(data.selected_decode_file.to_string(), output_file.to_str()
-                    .unwrap()
-                    .to_string(), true);
-                output_file.pop();
-                open_file_explorer(output_file.to_str()
-                    .unwrap()
-                    .to_string());
-            }
-        }
-    }
-}
-
-fn view(data: &Data) -> Element<Command> {
-    container(
-        column![
-            text("Pixel Clustering Format - by Horace Hoff"),
-        row![
-        button("Convert").style(button::primary).on_press(Command::SwitchFirst),
-        button("Decode").on_press(Command::SwitchSecond),
-    ],
-      if data.mode == 0 {
-          column![
-              button("Pick file").on_press(Command::SetFile),
-                toggler(data.is_lossy).label("Lossy Compression")
-                .on_toggle(|_| Command::ToggleLossy)
-                    ,
-                if data.is_lossy {
-                    column![
-                            text("These settings dictate which pixels are used to generate the palette of available colors, for each pixel of the image. Some combinations of these options will give better results depending on the chosen image. Please note that the more options are enabled, the better the image will look, but the file size will in turn potentially be higher."),
-                        toggler(data.base_radius).label("Base pixels")
-                            .on_toggle(|_| Command::ToggleBase),
-                        toggler(data.diagonal_pixels).label("Diagonal pixels")
-                            .on_toggle(|_| Command::ToggleDiagonal),
-                        toggler(data.extra_pixels).label("Extra pixels")
-                            .on_toggle(|_| Command::ToggleExtra),
-                        toggler(data.extra_extra_pixels).label("Extra Extra pixels")
-                            .on_toggle(|_| Command::ToggleExtraExtra)
-                    ].align_x(Horizontal::Left)
-                } else {
-                     column![]
-                },
-                button("Convert!").on_press(Command::Convert).style(|theme: &Theme, status|{button::primary(theme, if data.selected_file.is_empty() {Status::Disabled} else {status})})
-         ].align_x(Horizontal::Center)
-      } else {
-          column![
-              button("Pick file").on_press(Command::SetDecodeFile),
-              button("Decode").on_press(Command::Decode).style(|theme: &Theme, status|{button::primary(theme, if data.selected_decode_file.is_empty() {Status::Disabled} else {status})})
-          ]
-      }].align_x(Horizontal::Center)
-    ).center_x(Fill).into()
-}
-
 fn main() {
     let args: Vec<String> = env::args().collect();
     if args.len() == 1 {
-        tui();
+        // tui();
+        gui();
     } else if args.contains(&"--decode".to_string()) {
         decode(
             args[1].clone(),
