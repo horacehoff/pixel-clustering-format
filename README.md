@@ -39,9 +39,9 @@ git clone https://github.com/horacehoff/pixel-clustering-format
 ## Usage
 PCF can be used directly:
 ```sh
-cargo run --release -- [filename] [--verbose] [--decode]
+cargo run --release -- [filename] [--lossy OR --decode]
 // OR
-./pcf [filename] [--verbose] [--decode]
+./pcf [filename] [--lossy OR --decode]
 ```
 
 Or it can be used with its integrated TUI, which also exposes all of the settings. 

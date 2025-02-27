@@ -15,7 +15,7 @@ use crossterm::terminal::disable_raw_mode;
 use iced::alignment::Horizontal;
 use iced::widget::button::Status;
 use iced::widget::{button, column, container, row, text, toggler};
-use iced::{Element, Fill, Size, Theme};
+use iced::{Element, Fill, Font, Size, Theme};
 use rfd::FileDialog;
 
 fn display_menu(
@@ -372,7 +372,7 @@ fn tui() {
 
 fn gui() {
     iced::application("Pixel Clustering Format", update, view)
-        // .theme(|_| Theme::Nightfly)
+        .theme(|_| Theme::Nightfly)
         .window_size(Size {
             width: 350.0,
             height: 400.0,
@@ -476,48 +476,42 @@ fn update(data: &mut Data, command: Command) {
                 .to_string();
         }
         Command::Convert => {
-            let name = std::path::Path::new(&data.selected_file)
-                .file_name()
-                .unwrap()
-                .to_str()
-                .unwrap()
-                .split(".")
-                .collect::<Vec<&str>>()[0]
-                .to_string();
-            let mut output_file = FileDialog::new()
-                .set_file_name("output.pcf")
-                .save_file()
-                .unwrap();
-            convert(
-                &data.selected_file,
-                output_file.to_str().unwrap(),
-                false,
-                data.is_lossy,
-                true,
-                false,
-                false,
-                false,
-            );
-            // std::fs::copy(std::path::Path::new(&(name.to_string() + ".pcf")), output_file.clone()).unwrap();
-            // std::fs::remove_file(std::path::Path::new(&(name + ".pcf"))).unwrap();
-            output_file.pop();
-            open_file_explorer(output_file.to_str()
-                .unwrap()
-                .to_string());
+            if !data.selected_file.is_empty() {
+                let mut output_file = FileDialog::new()
+                    .set_file_name("output.pcf")
+                    .save_file()
+                    .unwrap();
+                convert(
+                    &data.selected_file,
+                    output_file.to_str().unwrap(),
+                    false,
+                    data.is_lossy,
+                    true,
+                    false,
+                    false,
+                    false,
+                );
+                output_file.pop();
+                open_file_explorer(output_file.to_str()
+                    .unwrap()
+                    .to_string());
+            }
         }
         Command::Decode => {
-            let mut output_file = FileDialog::new()
-                .set_file_name("output.png")
-                .save_file()
-                .unwrap();
-            clearscreen::clear().unwrap();
-            decode(data.selected_decode_file.to_string(), output_file.to_str()
-                .unwrap()
-                .to_string(), true);
-            output_file.pop();
-            open_file_explorer(output_file.to_str()
-                                   .unwrap()
-                                   .to_string());
+            if !data.selected_decode_file.is_empty() {
+                let mut output_file = FileDialog::new()
+                    .set_file_name("output.png")
+                    .save_file()
+                    .unwrap();
+                clearscreen::clear().unwrap();
+                decode(data.selected_decode_file.to_string(), output_file.to_str()
+                    .unwrap()
+                    .to_string(), true);
+                output_file.pop();
+                open_file_explorer(output_file.to_str()
+                    .unwrap()
+                    .to_string());
+            }
         }
     }
 }
@@ -571,7 +565,7 @@ fn main() {
         decode(
             args[1].clone(),
             "output.png".to_string(),
-            args.contains(&"--verbose".to_string()),
+            false,
         );
     } else {
         let file_path = args[1].to_string();
@@ -586,7 +580,7 @@ fn main() {
         convert(
             &args[1],
             &(name + ".pcf"),
-            args.contains(&"--verbose".to_string()),
+            false,
             args.contains(&"--lossy".to_string()),
             true,
             false,
