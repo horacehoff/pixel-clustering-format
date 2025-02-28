@@ -146,9 +146,7 @@ fn display_menu(
             *extra_extra_radius,
         );
         output_file.pop();
-        open_file_explorer(output_file.to_str()
-            .unwrap()
-            .to_string());
+        open_file_explorer(output_file.to_str().unwrap().to_string());
         exit(0);
     } else if *mode == 2 && enter && *sel == 1 {
         disable_raw_mode().unwrap();
@@ -157,13 +155,13 @@ fn display_menu(
             .save_file()
             .unwrap();
         clearscreen::clear().unwrap();
-        decode((*selected_file_path).to_string(), output_file.to_str()
-            .unwrap()
-            .to_string(), true);
+        decode(
+            (*selected_file_path).to_string(),
+            output_file.to_str().unwrap().to_string(),
+            true,
+        );
         output_file.pop();
-        open_file_explorer(output_file.to_str()
-            .unwrap()
-            .to_string());
+        open_file_explorer(output_file.to_str().unwrap().to_string());
         exit(0);
     } else if *mode == 2 && enter && *sel == 2 {
         *mode = 0;
@@ -373,7 +371,10 @@ fn tui() {
 
 fn gui() {
     #[derive(PartialEq)]
-    enum Modes { Encode, Decode }
+    enum Modes {
+        Encode,
+        Decode,
+    }
     let mut mode = Modes::Encode;
     let mut selected_file_path = String::new();
     let mut selected_decode_file_path = String::new();
@@ -382,7 +383,6 @@ fn gui() {
     let mut diagonal_pixels = false;
     let mut extra_pixels = false;
     let mut extra_extra_pixels = false;
-
 
     let mut options = eframe::NativeOptions::default();
     options.viewport.icon = Some(Arc::from(IconData::default()));
@@ -485,7 +485,6 @@ fn gui() {
     }).unwrap();
 }
 
-
 fn open_file_explorer(path: String) {
     if cfg!(windows) {
         std::process::Command::new("explorer")
@@ -510,11 +509,7 @@ fn main() {
         // tui();
         gui();
     } else if args.contains(&"--decode".to_string()) {
-        decode(
-            args[1].clone(),
-            "output.png".to_string(),
-            false,
-        );
+        decode(args[1].clone(), "output.png".to_string(), false);
     } else {
         let file_path = args[1].to_string();
         let name = std::path::Path::new(&file_path)

@@ -205,7 +205,7 @@ pub fn floyd_steinberg_dither(
 ) {
     let (width, height) = image.dimensions();
 
-    for y in tqdm!(0..height, desc="Dithering") {
+    for y in tqdm!(0..height, desc = "Dithering") {
         for x in 0..width {
             let old_pixel = *image.get_pixel(x, y);
             let new_pixel = find_closest_palette_color(
@@ -298,7 +298,7 @@ pub fn convert(
 
     // put the pixels in a hashmap
     let mut px_colors: HashMap<String, Vec<(u32, u32)>> = Default::default();
-    for w in tqdm!(pixels, desc="Registering pixels") {
+    for w in tqdm!(pixels, desc = "Registering pixels") {
         let colors = w.channels();
         let color = optimize_hex_color(
             HexColor::rgba(colors[0], colors[1], colors[2], colors[3])
@@ -324,8 +324,7 @@ pub fn convert(
 
     let mut outputf: String = format!("{width}%{height}%{bg_color}%");
 
-
-    for (color, pixels) in tqdm!(px_colors.iter(), desc="Compressing") {
+    for (color, pixels) in tqdm!(px_colors.iter(), desc = "Compressing") {
         let mut grouped_coords: HashMap<String, Vec<u32>> = Default::default();
         let mut y_coords: HashMap<String, Vec<u32>> = Default::default();
         let mut is_y = false;
