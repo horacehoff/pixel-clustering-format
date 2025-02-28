@@ -1,5 +1,6 @@
 use std::env;
 use std::process::exit;
+use std::sync::Arc;
 use std::time::Duration;
 
 mod data;
@@ -12,7 +13,7 @@ use colored::{ColoredString, Colorize};
 use crossterm::event::{poll, read, Event, KeyCode, KeyEventKind, KeyModifiers};
 use crossterm::style::Stylize;
 use crossterm::terminal::disable_raw_mode;
-use egui::Vec2;
+use egui::{IconData, Vec2};
 use rfd::FileDialog;
 
 fn display_menu(
@@ -135,7 +136,7 @@ fn display_menu(
             .save_file()
             .unwrap();
         convert(
-            &selected_file_path,
+            selected_file_path,
             output_file.to_str().unwrap(),
             false,
             *selected_lossy,
@@ -382,7 +383,9 @@ fn gui() {
     let mut extra_pixels = false;
     let mut extra_extra_pixels = false;
 
+
     let mut options = eframe::NativeOptions::default();
+    options.viewport.icon = Some(Arc::from(IconData::default()));
     options.viewport.inner_size = Option::from(Vec2::new(280.0, 455.0));
     options.viewport.resizable = Option::from(false);
     eframe::run_simple_native("Pixel Clustering Format", options, move |ctx, _frame| {
@@ -488,11 +491,15 @@ fn open_file_explorer(path: String) {
         std::process::Command::new("explorer")
             .arg(path)
             .spawn()
+            .unwrap()
+            .wait()
             .unwrap();
     } else {
         std::process::Command::new("open")
             .arg(path)
             .spawn()
+            .unwrap()
+            .wait()
             .unwrap();
     }
 }
