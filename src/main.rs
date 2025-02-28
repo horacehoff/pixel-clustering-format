@@ -12,6 +12,7 @@ use colored::{ColoredString, Colorize};
 use crossterm::event::{poll, read, Event, KeyCode, KeyEventKind, KeyModifiers};
 use crossterm::style::Stylize;
 use crossterm::terminal::disable_raw_mode;
+use egui::Vec2;
 use rfd::FileDialog;
 
 fn display_menu(
@@ -381,7 +382,9 @@ fn gui() {
     let mut extra_pixels = false;
     let mut extra_extra_pixels = false;
 
-    let options = eframe::NativeOptions::default();
+    let mut options = eframe::NativeOptions::default();
+    options.viewport.inner_size = Option::from(Vec2::new(280.0, 455.0));
+    options.viewport.resizable = Option::from(false);
     eframe::run_simple_native("Pixel Clustering Format", options, move |ctx, _frame| {
         ctx.set_zoom_factor(1.1);
         egui::CentralPanel::default().show(ctx, |ui| {
