@@ -6,14 +6,11 @@ use mashi_core::Decoder;
 use std::fs::File;
 use std::io::Read;
 
-pub fn expand_math(s: String) -> String {
-    let parts: Vec<String> = s.split('+').map(|x| x.to_string()).collect();
+pub fn expand_math(s: &str) -> String {
+    let parts: Vec<String> = s.split('+').map(ToString::to_string).collect();
     let mut output: String = String::new();
     for x in parts {
-        if !x.contains("*") {
-            output.push('+');
-            output.push_str(&x);
-        } else {
+        if x.contains('*') {
             let split: Vec<&str> = x.split('*').collect();
             let count: u32 = split[1].parse().unwrap();
             let number = split[0];
@@ -21,12 +18,15 @@ pub fn expand_math(s: String) -> String {
                 output.push('+');
                 output.push_str(number);
             }
+        } else {
+            output.push('+');
+            output.push_str(&x);
         }
     }
     output.trim_start_matches('+').to_string()
 }
 
-pub fn math_to_vec(s: String) -> Vec<String> {
+pub fn math_to_vec(s: &str) -> Vec<String> {
     let splits: Vec<u32> = s
         .split('+')
         .collect::<Vec<&str>>()
@@ -37,7 +37,7 @@ pub fn math_to_vec(s: String) -> Vec<String> {
     let mut count: u32 = 0;
     for x in splits {
         count += x;
-        output.push(count.to_string())
+        output.push(count.to_string());
     }
     output
 }
@@ -152,11 +152,11 @@ pub fn decode(
         let parsed = json::parse(&pixels).unwrap();
         for (x, val) in parsed.entries() {
             // de-group and expand each key
-            let expanded = expand_math(x.to_string());
-            let vecs = math_to_vec(expanded);
+            let expanded = expand_math(x);
+            let vecs = math_to_vec(&expanded);
             // expand the value
-            let expanded = expand_math(val.to_string());
-            let vecs2 = math_to_vec(expanded);
+            let expanded = expand_math(val.as_str().unwrap());
+            let vecs2 = math_to_vec(&expanded);
             for y in vecs {
                 for z in &vecs2 {
                     let color = image::Rgba(<[u8; 4]>::from(

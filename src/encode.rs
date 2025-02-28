@@ -11,7 +11,7 @@ use std::fs;
 use std::fs::File;
 use std::io::Write;
 
-fn optimize_math_str(input: String) -> String {
+fn optimize_math_str(input: &str) -> String {
     let mut nums: Vec<&str> = input.split('+').filter(|s| !s.is_empty()).collect();
     nums.push("");
     let mut new_sequence = String::new();
@@ -37,7 +37,7 @@ fn optimize_math_str(input: String) -> String {
 }
 
 fn vec_to_math(input: HashMap<String, Vec<u32>>) -> HashMap<String, String> {
-    let mut export_hash: HashMap<String, String> = Default::default();
+    let mut export_hash: HashMap<String, String> = HashMap::default();
 
     for (name, coord_pixels) in input {
         let mut math_sequence: String = format!("{}", coord_pixels[0]);
@@ -45,24 +45,24 @@ fn vec_to_math(input: HashMap<String, Vec<u32>>) -> HashMap<String, String> {
         for pixel in coord_pixels.iter().skip(1) {
             let diff = pixel - value;
             value += diff;
-            math_sequence.push_str(&format!("+{diff}"))
+            math_sequence.push_str(&format!("+{diff}"));
         }
-        export_hash.insert(name, optimize_math_str(math_sequence.to_string()));
+        export_hash.insert(name, optimize_math_str(&math_sequence));
     }
     export_hash
 }
 
-fn group_by_key(input: HashMap<String, String>) -> HashMap<String, String> {
-    let mut new: HashMap<String, Vec<u32>> = Default::default();
+fn group_by_key(input: &HashMap<String, String>) -> HashMap<String, String> {
+    let mut new: HashMap<String, Vec<u32>> = HashMap::default();
     for x in input.keys() {
-        if !new.contains_key(&input[x]) {
-            new.insert(input[x].clone(), vec![x.clone().parse().unwrap()]);
-        } else {
+        if new.contains_key(&input[x]) {
             new.get_mut(&input[x]).unwrap().push(x.parse().unwrap());
+        } else {
+            new.insert(input[x].clone(), vec![x.clone().parse().unwrap()]);
         }
     }
     for x in new.values_mut() {
-        x.sort();
+        x.sort_unstable();
     }
     vec_to_math(new)
 }
@@ -77,10 +77,10 @@ fn optimize_hex_color(input: String) -> String {
             &output_color[1..2],
             &output_color[3..4],
             &output_color[5..6]
-        )
+        );
     }
     if output_color.ends_with("FF") {
-        output_color.truncate(output_color.len() - 2)
+        output_color.truncate(output_color.len() - 2);
     }
     output_color
 }
@@ -352,7 +352,7 @@ pub fn convert(
         }
 
         let export_hash: HashMap<String, String> = vec_to_math(grouped_coords);
-        let mut output = group_by_key(export_hash);
+        let mut output = group_by_key(&export_hash);
         let mut sequenced = format!("{color}{output:?}")
             .replace(" ", "")
             .replace('"', "");

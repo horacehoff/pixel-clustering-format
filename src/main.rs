@@ -114,7 +114,7 @@ fn display_menu(
             exit(0);
         }
     } else if *mode == 1 && enter && *sel == 1 {
-        *selected_lossy = !*selected_lossy
+        *selected_lossy = !*selected_lossy;
     } else if (*mode == 1 || *mode == 2) && enter && *sel == 0 {
         *selected_file_path = FileDialog::new()
             .add_filter(
@@ -157,7 +157,7 @@ fn display_menu(
             .save_file()
             .unwrap();
         clearscreen::clear().unwrap();
-        decode(selected_file_path.to_string(), output_file.to_str()
+        decode((*selected_file_path).to_string(), output_file.to_str()
             .unwrap()
             .to_string(), true);
         output_file.pop();
@@ -522,7 +522,7 @@ fn main() {
             .unwrap()
             .to_str()
             .unwrap()
-            .split(".")
+            .split('.')
             .collect::<Vec<&str>>()[0]
             .to_string();
         convert(

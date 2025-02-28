@@ -3,14 +3,14 @@ use std::fs;
 use std::fs::{DirEntry, File, OpenOptions};
 use std::io::{Read, Write};
 
-pub fn compare(args: Vec<String>) {
+pub fn compare(args: &[String]) {
     let mut name: Vec<String> = Vec::new();
     let mut original: Vec<usize> = Vec::new();
     let mut compressed: Vec<usize> = Vec::new();
     let mut compressed_lossy: Vec<usize> = Vec::new();
 
     fn test_entry(
-        entry: DirEntry,
+        entry: &DirEntry,
         name: &mut Vec<String>,
         original: &mut Vec<usize>,
         compressed: &mut Vec<usize>,
@@ -97,7 +97,7 @@ pub fn compare(args: Vec<String>) {
             .starts_with(args.get(1).unwrap())
         {
             test_entry(
-                fuck,
+                &fuck,
                 &mut name,
                 &mut original,
                 &mut compressed,
@@ -115,5 +115,5 @@ pub fn compare(args: Vec<String>) {
         .truncate(true)
         .open("data.txt")
         .unwrap();
-    file.write_all(&encoded).unwrap()
+    file.write_all(&encoded).unwrap();
 }
