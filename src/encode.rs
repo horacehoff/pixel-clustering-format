@@ -6,7 +6,7 @@ use hex_color::HexColor;
 use image::{open, Pixel, Rgba, RgbaImage};
 use kdam::tqdm;
 use mashi_core::Encoder;
-use rayon::prelude::ParallelSliceMut;
+use rayon::prelude::{IntoParallelIterator, IntoParallelRefIterator, ParallelSliceMut};
 use std::fs;
 use std::fs::File;
 use std::io::Write;
@@ -40,7 +40,7 @@ fn vec_to_math(input: HashMap<String, Vec<u32>>) -> HashMap<String, String> {
     let mut export_hash: HashMap<String, String> = HashMap::default();
 
     for (name, coord_pixels) in input {
-        let mut math_sequence: String = format!("{}", coord_pixels[0]);
+        let mut math_sequence: String = coord_pixels[0].to_string();
         let mut value = coord_pixels[0];
         for pixel in coord_pixels.iter().skip(1) {
             let diff = pixel - value;
@@ -205,7 +205,7 @@ pub fn floyd_steinberg_dither(
 ) {
     let (width, height) = image.dimensions();
 
-    for y in 0..height {
+    for y in tqdm!(0..height, desc="Dithering") {
         for x in 0..width {
             let old_pixel = *image.get_pixel(x, y);
             let new_pixel = find_closest_palette_color(
@@ -298,7 +298,7 @@ pub fn convert(
 
     // put the pixels in a hashmap
     let mut px_colors: HashMap<String, Vec<(u32, u32)>> = Default::default();
-    for w in tqdm!(pixels) {
+    for w in tqdm!(pixels, desc="Registering pixels") {
         let colors = w.channels();
         let color = optimize_hex_color(
             HexColor::rgba(colors[0], colors[1], colors[2], colors[3])
@@ -307,11 +307,10 @@ pub fn convert(
         );
         px_colors.entry(color).or_default().push((x, y));
         // if at EOL, go to start of next line
-        if x == width - 1 {
+        x += 1;
+        if x == width {
             x = 0;
             y += 1;
-        } else {
-            x += 1;
         }
     }
     // remove dominant color
@@ -326,7 +325,7 @@ pub fn convert(
     let mut outputf: String = format!("{width}%{height}%{bg_color}%");
 
 
-    for (color, pixels) in tqdm!(px_colors.iter()) {
+    for (color, pixels) in tqdm!(px_colors.iter(), desc="Compressing") {
         let mut grouped_coords: HashMap<String, Vec<u32>> = Default::default();
         let mut y_coords: HashMap<String, Vec<u32>> = Default::default();
         let mut is_y = false;
