@@ -1,5 +1,5 @@
 [package]
-name = "pcf"
+name = "pixel-clustering-format"
 version = "1.0.0"
 edition = "2021"
 
