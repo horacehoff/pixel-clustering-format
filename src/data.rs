@@ -84,7 +84,7 @@ pub fn compare(args: &[String]) {
     compressed_lossy = result.3;
     // }
 
-    let entries = fs::read_dir("test-images/").unwrap();
+    let entries = fs::read_dir("../png_comparisons/test-images/").unwrap();
     for entry in entries {
         let fuck = entry.unwrap();
         if fuck

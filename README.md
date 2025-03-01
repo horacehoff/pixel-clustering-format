@@ -62,7 +62,7 @@ Or it can be used with its GUI, by simply launching the binary with no arguments
 ## Examples
 ### Blue image
 #### PNG:
-![PNG Blue image](test-images/blue.png)
+![PNG Blue image](png_comparisons/test-images/blue.png)
 484 bytes
 #### LPI:
 ```
@@ -72,7 +72,7 @@ Or it can be used with its GUI, by simply launching the binary with no arguments
 
 ### Blue ball pixel art
 #### PNG:
-![Blue ball pixel art](test-images/blue_ball_pixel_art.png)
+![Blue ball pixel art](png_comparisons/test-images/blue_ball_pixel_art.png)
 70 kB
 #### PCF:
 
@@ -88,7 +88,7 @@ Or it can be used with its GUI, by simply launching the binary with no arguments
 
 ### Google logo
 #### PNG:
-![Google logo](test-images/google_logo.png)
+![Google logo](png_comparisons/test-images/google_logo.png)
 222 kB
 ### PCF:
 
