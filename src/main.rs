@@ -155,7 +155,7 @@ fn display_menu(
         clearscreen::clear().unwrap();
         decode(
             (*selected_file_path).to_string(),
-            output_file.to_str().unwrap().to_string(),
+            output_file.to_str().unwrap(),
         );
         output_file.pop();
         open_file_explorer(output_file.to_str().unwrap().to_string());
@@ -471,8 +471,7 @@ fn gui() {
                             .unwrap();
                         clearscreen::clear().unwrap();
                         decode(selected_decode_file_path.to_string(), output_file.to_str()
-                            .unwrap()
-                            .to_string());
+                            .unwrap());
                         output_file.pop();
                         open_file_explorer(output_file.to_str()
                             .unwrap()
@@ -511,7 +510,7 @@ fn main() {
         // tui();
         gui();
     } else if args.contains(&"--decode".to_string()) {
-        decode(args[1].clone(), "output.png".to_string());
+        decode(args[1].clone(), "output.png");
     } else {
         let file_path = args[1].to_string();
         let name = std::path::Path::new(&file_path)

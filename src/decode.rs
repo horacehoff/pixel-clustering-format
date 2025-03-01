@@ -1,5 +1,4 @@
 use colored::Colorize;
-use const_currying::const_currying;
 use image::RgbaImage;
 use kdam::tqdm;
 use mashi_core::Decoder;
@@ -44,7 +43,7 @@ pub fn math_to_vec(s: &str) -> Vec<String> {
 
 pub fn decode(
     path: String,
-    output_file: String,
+    output_file: &str,
 ) {
     println!("PCF -- Decoding {}...", path.blue());
     let mut input = File::open(path).unwrap();
@@ -54,8 +53,8 @@ pub fn decode(
     let mut result = String::new();
 
     //  check if contents is compressed
-    let test = String::from_utf8(contents.clone()).unwrap_or(String::from(""));
-    if test.contains("%") && test.contains("#") {
+    let test = String::from_utf8(contents.clone()).unwrap_or_default();
+    if test.contains('%') && test.contains('#') {
         result = test;
     } else {
         let mut decoder = Decoder::new();
@@ -64,17 +63,17 @@ pub fn decode(
     }
 
     // if some letters need to be replaced, replace them
-    if result.contains("_") {
-        let matcher = result.split("_").collect::<Vec<&str>>();
+    if result.contains('_') {
+        let matcher = result.split('_').collect::<Vec<&str>>();
         let mut output: String = matcher[0].to_string();
         let letters = matcher[1];
 
-        let mut parts: Vec<&str> = letters.split("$").collect();
+        let mut parts: Vec<&str> = letters.split('$').collect();
         parts.retain(|x| !x.is_empty());
         let couples: Vec<(String, String)> = parts
             .iter()
             .zip(parts.iter().skip(1))
-            .map(|(a, b)| (b.to_string(), a.to_string()))
+            .map(|(a, b)| ((*b).to_string(), (*a).to_string()))
             .rev()
             .collect();
 
@@ -84,7 +83,7 @@ pub fn decode(
         result = output;
     }
 
-    let mut colors: Vec<String> = result.split('%').map(|x| x.to_string()).collect();
+    let mut colors: Vec<String> = result.split('%').map(ToString::to_string).collect();
     let width: u32 = colors.remove(0).parse().unwrap();
     let height: u32 = colors.remove(0).parse().unwrap();
     let bg_color = colors.remove(0);
@@ -96,11 +95,11 @@ pub fn decode(
         )),
     );
 
-    let mut colors: Vec<String> = colors.remove(0).split("#").map(|x| x.to_string()).collect();
+    let mut colors: Vec<String> = colors.remove(0).split('#').map(ToString::to_string).collect();
     colors.retain(|x| !x.is_empty());
     for x in tqdm!(colors.iter_mut()) {
         let mut is_y = false;
-        if x.ends_with("y") {
+        if x.ends_with('y') {
             is_y = true;
             x.pop().unwrap();
         }
@@ -109,18 +108,18 @@ pub fn decode(
         if split.len() == 1 {
             let split: Vec<&str> = x.split('[').collect();
             let color = format!("#{}", split[0]);
-            let mut pixels: Vec<&str> = split[1].trim_end_matches("]").split(")").collect();
+            let mut pixels: Vec<&str> = split[1].trim_end_matches(']').split(')').collect();
             pixels = pixels
                 .iter()
                 .map(|x| {
-                    x.trim_start_matches("(")
-                        .trim_start_matches(",")
-                        .trim_end_matches(",")
-                        .trim_end_matches(")")
-                        .trim_start_matches("(")
-                        .trim_start_matches(",")
-                        .trim_end_matches(",")
-                        .trim_end_matches(")")
+                    x.trim_start_matches('(')
+                        .trim_start_matches(',')
+                        .trim_end_matches(',')
+                        .trim_end_matches(')')
+                        .trim_start_matches('(')
+                        .trim_start_matches(',')
+                        .trim_end_matches(',')
+                        .trim_end_matches(')')
                 })
                 .collect();
             pixels.retain(|x| !x.is_empty());
@@ -142,8 +141,8 @@ pub fn decode(
         }
         let color = format!("#{}", split[0]);
         let mut pixels = format!("{{{}", split[1])
-            .replace(":", "\":\"")
-            .replace(",", "\",\"");
+            .replace(':', "\":\"")
+            .replace(',', "\",\"");
         pixels.insert(1, '"');
         pixels.insert(pixels.len() - 1, '"');
 

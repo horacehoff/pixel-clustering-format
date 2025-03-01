@@ -6,7 +6,7 @@ use hex_color::HexColor;
 use image::{open, Pixel, Rgba, RgbaImage};
 use kdam::tqdm;
 use mashi_core::Encoder;
-use rayon::prelude::{IntoParallelIterator, IntoParallelRefIterator, ParallelSliceMut};
+use rayon::prelude::{ParallelSliceMut};
 use std::fs;
 use std::fs::File;
 use std::io::Write;
@@ -298,7 +298,7 @@ pub fn convert(
     let pixels = image.pixels();
 
     // put the pixels in a hashmap
-    let mut px_colors: HashMap<String, Vec<(u32, u32)>> = Default::default();
+    let mut px_colors: HashMap<String, Vec<(u32, u32)>> = HashMap::default();
     for w in tqdm!(pixels, desc = "Registering pixels") {
         let colors = w.channels();
         let color = optimize_hex_color(
@@ -326,8 +326,8 @@ pub fn convert(
     let mut outputf: String = format!("{width}%{height}%{bg_color}%");
 
     for (color, pixels) in tqdm!(px_colors.iter(), desc = "Compressing") {
-        let mut grouped_coords: HashMap<String, Vec<u32>> = Default::default();
-        let mut y_coords: HashMap<String, Vec<u32>> = Default::default();
+        let mut grouped_coords: HashMap<String, Vec<u32>> = HashMap::default();
+        let mut y_coords: HashMap<String, Vec<u32>> = HashMap::default();
         let mut is_y = false;
         for pixel in pixels {
             // group by abscissa
@@ -348,16 +348,16 @@ pub fn convert(
         let export_hash: HashMap<String, String> = vec_to_math(grouped_coords);
         let output = group_by_key(&export_hash);
         let mut sequenced = format!("{color}{output:?}")
-            .replace(" ", "")
+            .replace(' ', "")
             .replace('"', "");
 
         if format!("{output:?}").replace('"', "").len() > format!("{pixels:?}").len() {
-            outputf.push_str(&format!("{color}{pixels:?}").replace(" ", ""));
+            outputf.push_str(&format!("{color}{pixels:?}").replace(' ', ""));
         } else {
             if is_y {
                 sequenced.push('y');
             }
-            sequenced = sequenced.replace("\"", "").replace("\\", "");
+            sequenced = sequenced.replace(['"', '\\'], "");
             outputf.push_str(&sequenced);
         }
     }
@@ -379,7 +379,7 @@ pub fn convert(
         (fs::metadata(output_file).unwrap().len() * 100 / fs::metadata(path).unwrap().len())
             .to_string()
             .blue()
-    )
+    );
 }
 
 #[const_currying]
