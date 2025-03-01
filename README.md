@@ -44,7 +44,7 @@ cargo run --release -- [filename] [--lossy OR --decode]
 ./pcf [filename] [--lossy OR --decode]
 ```
 
-Or it can be used with its GUI, by simply launching the binary with no arguments:
+Or it can be used with its GUI, by simply launching the binary with no arguments:\
 <img src="assets/one.jpg" alt="Screenshot 1" width="160"/>
 <img src="assets/two.jpg" alt="Screenshot 2" width="160"/>
 <img src="assets/three.jpg" alt="Screenshot 3" width="160"/>
