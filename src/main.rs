@@ -383,14 +383,17 @@ fn gui() {
 
     let mut options = eframe::NativeOptions::default();
     options.viewport.icon = Some(Arc::from(IconData::default()));
-    options.viewport.inner_size = Option::from(Vec2::new(280.0, 455.0));
+    options.viewport.inner_size = Option::from(Vec2::new(310.0, 458.0));
     options.viewport.resizable = Option::from(false);
     eframe::run_simple_native("Pixel Clustering Format", options, move |ctx, _frame| {
         ctx.set_zoom_factor(1.1);
         egui::CentralPanel::default().show(ctx, |ui| {
             ui.label("Pixel Clustering Format");
             ui.label("by Horace Hoff");
-            ui.hyperlink_to("GitHub", "https://github.com/horacehoff/pixel-clustering-format");
+            ui.horizontal(|ui| {
+                ui.hyperlink_to("GitHub", "https://github.com/horacehoff/pixel-clustering-format");
+                ui.hyperlink_to("Website", "https://horacehoff.github.io");
+            });
             ui.add_space(5.0);
             ui.horizontal_top(|ui| {
                 ui.selectable_value(&mut mode, Modes::Encode, "Encode");
@@ -476,7 +479,10 @@ fn gui() {
                             .to_string());
                     };
                 })
-            }
+            };
+            ui.vertical_centered(|ui| {
+                ui.label("Ad Astra Per Aspera");
+            })
         });
     }).unwrap();
 }
