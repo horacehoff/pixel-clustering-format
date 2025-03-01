@@ -44,7 +44,6 @@ pub fn compare(args: &[String]) {
             false,
             false,
             false,
-            false,
         );
         compressed.push(fs::metadata("test.pcf").unwrap().len() as usize);
 
@@ -59,7 +58,6 @@ pub fn compare(args: &[String]) {
                                 entry.path().to_str().unwrap(),
                                 "test.pcf",
                                 false,
-                                true,
                                 b1,
                                 b2,
                                 b3,

@@ -42,11 +42,9 @@ pub fn math_to_vec(s: &str) -> Vec<String> {
     output
 }
 
-#[const_currying]
 pub fn decode(
     path: String,
     output_file: String,
-    #[maybe_const(dispatch = verbose, consts = [true, false])] verbose: bool,
 ) {
     println!("PCF -- Decoding {}...", path.blue());
     let mut input = File::open(path).unwrap();
@@ -174,6 +172,6 @@ pub fn decode(
         }
     }
 
-    output.save(output_file.to_string()).unwrap();
+    output.save(&output_file).unwrap();
     println!("\nSaved to {}.", output_file.blue());
 }

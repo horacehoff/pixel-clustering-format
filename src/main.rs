@@ -11,7 +11,6 @@ use crate::decode::decode;
 use crate::encode::convert;
 use colored::{ColoredString, Colorize};
 use crossterm::event::{poll, read, Event, KeyCode, KeyEventKind, KeyModifiers};
-use crossterm::style::Stylize;
 use crossterm::terminal::disable_raw_mode;
 use egui::{IconData, Vec2};
 use rfd::FileDialog;
@@ -138,7 +137,6 @@ fn display_menu(
         convert(
             selected_file_path,
             output_file.to_str().unwrap(),
-            false,
             *selected_lossy,
             *base_radius,
             *diagonal_pixels,
@@ -158,7 +156,6 @@ fn display_menu(
         decode(
             (*selected_file_path).to_string(),
             output_file.to_str().unwrap().to_string(),
-            true,
         );
         output_file.pop();
         open_file_explorer(output_file.to_str().unwrap().to_string());
@@ -436,7 +433,6 @@ fn gui() {
                         convert(
                             &selected_file_path,
                             output_file.to_str().unwrap(),
-                            false,
                             is_lossy,
                             base_pixels,
                             diagonal_pixels,
@@ -473,7 +469,7 @@ fn gui() {
                         clearscreen::clear().unwrap();
                         decode(selected_decode_file_path.to_string(), output_file.to_str()
                             .unwrap()
-                            .to_string(), true);
+                            .to_string());
                         output_file.pop();
                         open_file_explorer(output_file.to_str()
                             .unwrap()
@@ -509,7 +505,7 @@ fn main() {
         // tui();
         gui();
     } else if args.contains(&"--decode".to_string()) {
-        decode(args[1].clone(), "output.png".to_string(), false);
+        decode(args[1].clone(), "output.png".to_string());
     } else {
         let file_path = args[1].to_string();
         let name = std::path::Path::new(&file_path)
@@ -523,7 +519,6 @@ fn main() {
         convert(
             &args[1],
             &(name + ".pcf"),
-            false,
             args.contains(&"--lossy".to_string()),
             true,
             false,
