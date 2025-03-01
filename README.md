@@ -44,7 +44,10 @@ cargo run --release -- [filename] [--lossy OR --decode]
 ./pcf [filename] [--lossy OR --decode]
 ```
 
-Or it can be used with its integrated TUI, which also exposes all of the settings. 
+Or it can be used with its GUI, by simply launching the binary with no arguments:
+<img src="one.jpg" alt="drawing" width="160"/>
+<img src="two.jpg" alt="drawing" width="160"/>
+<img src="three.jpg" alt="drawing" width="160"/>
 
 ## Comparisons with PNG
 
