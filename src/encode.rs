@@ -163,8 +163,8 @@ fn find_closest_palette_color(
     for x in pixels {
         palette.push(image.get_pixel(x.0, x.1));
     }
-    *palette
-        .into_iter()
+    **palette
+        .iter()
         .min_by_key(|p| {
             let dr = pixel[0] as i32 - p[0] as i32;
             let dg = pixel[1] as i32 - p[1] as i32;
@@ -172,7 +172,7 @@ fn find_closest_palette_color(
             let da = pixel[3] as i32 - p[3] as i32;
             dr * dr + dg * dg + db * db + da * da
         })
-        .unwrap_or(&pixel)
+        .unwrap_or(&&pixel)
 }
 
 fn get_quant_error_mul(mul: u8, quant_error: (i16, i16, i16, i16)) -> Rgba<u8> {

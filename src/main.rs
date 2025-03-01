@@ -379,7 +379,7 @@ fn gui() {
     let mut selected_file_path = String::new();
     let mut selected_decode_file_path = String::new();
     let mut is_lossy = false;
-    let mut base_pixels = false;
+    let mut base_pixels = true;
     let mut diagonal_pixels = false;
     let mut extra_pixels = false;
     let mut extra_extra_pixels = false;
@@ -422,10 +422,10 @@ fn gui() {
                             ui.label("These settings control the range of the palette used by the dithering algorithm on a per-pixel basis.");
                             ui.label("The more options enabled, the better the image will look, but the bigger it will be.");
                             ui.label("Try different settings combinations, there usually isn't a one-size-fits-all solution.");
-                            ui.checkbox(&mut base_pixels, "Base pixels");
-                            ui.checkbox(&mut diagonal_pixels, "Diagonal pixels");
-                            ui.checkbox(&mut extra_pixels, "Extra pixels");
-                            ui.checkbox(&mut extra_extra_pixels, "Extra-Extra pixels");
+                            ui.add_enabled(diagonal_pixels || extra_pixels || extra_extra_pixels,egui::Checkbox::new(&mut base_pixels, "Base pixels"));
+                            ui.add_enabled(base_pixels || extra_pixels || extra_extra_pixels,egui::Checkbox::new(&mut diagonal_pixels, "Diagonal pixels"));
+                            ui.add_enabled(base_pixels || diagonal_pixels || extra_extra_pixels,egui::Checkbox::new(&mut extra_pixels, "Extra pixels"));
+                            ui.add_enabled(base_pixels || extra_pixels || diagonal_pixels,egui::Checkbox::new(&mut extra_extra_pixels, "Extra-Extra pixels"));
                         });
                     }
                     if ui.add_enabled(!selected_file_path.is_empty(),egui::Button::new("Start")).clicked() {
