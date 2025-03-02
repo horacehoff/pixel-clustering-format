@@ -390,13 +390,12 @@ pub fn convert(
     let mut file = File::create(output_file).unwrap();
     let mut encoder = Encoder::new();
     let output = encoder.encode(compressed.as_bytes());
-    file.write_all(compressed.as_bytes()).unwrap();
 
-    // if size_of_val(&output) < size_of_val(compressed.as_bytes()) {
-    //     file.write_all(&output).unwrap();
-    // } else {
-    //     file.write_all(compressed.as_bytes()).unwrap();
-    // }
+    if size_of_val(&output) < size_of_val(compressed.as_bytes()) {
+        file.write_all(&output).unwrap();
+    } else {
+        file.write_all(compressed.as_bytes()).unwrap();
+    }
     println!(
         "\nSaved to {} - {}% of original size.",
         Colorize::blue(output_file),
