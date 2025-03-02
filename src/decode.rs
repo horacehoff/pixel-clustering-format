@@ -62,6 +62,27 @@ pub fn decode(
         result = String::from_utf8(decompressed.to_vec()).unwrap();
     }
 
+    result = result.replace("é", "13")
+        .replace("à", "69")
+        .replace("@", "28")
+        .replace("ç", "18")
+        .replace(";", "19")
+        .replace("µ", "37")
+        .replace("|", "10")
+        .replace("¤", "16")
+        .replace("£", "24")
+        .replace("\\", "14")
+        .replace("=", "21")
+        .replace("`", "22")
+        .replace("&", "27")
+        .replace(".", "12")
+        .replace("§", "23")
+        .replace("!", "17")
+        .replace("/", "42")
+        .replace("è", "11")
+        .replace("~", "01")
+        .replace("^", "00");
+    
     // if some letters need to be replaced, replace them
     if result.contains('_') {
         let matcher = result.split('_').collect::<Vec<&str>>();
@@ -87,6 +108,7 @@ pub fn decode(
     let width: u32 = colors.remove(0).parse().unwrap();
     let height: u32 = colors.remove(0).parse().unwrap();
     let bg_color = colors.remove(0);
+    println!("bg {bg_color}");
     let mut output = RgbaImage::from_pixel(
         width,
         height,

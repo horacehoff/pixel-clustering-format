@@ -6,7 +6,7 @@ use hex_color::HexColor;
 use image::{open, Pixel, Rgba, RgbaImage};
 use kdam::tqdm;
 use mashi_core::Encoder;
-use rayon::prelude::{ParallelSliceMut};
+use rayon::prelude::ParallelSliceMut;
 use std::fs;
 use std::fs::File;
 use std::io::Write;
@@ -362,17 +362,41 @@ pub fn convert(
         }
     }
 
-    let compressed = remove_dup_patterns(outputf, 2, 4);
+    let mut compressed = remove_dup_patterns(outputf, 2, 4);
+    compressed = compressed
+        .replace("00", "^")
+        .replace("01", "~")
+        .replace("11", "è")
+        .replace("42", "/")
+        .replace("42", "/")
+        .replace("17", "!")
+        .replace("23", "§")
+        .replace("12", ".")
+        .replace("27", "&")
+        .replace("22", "`")
+        .replace("21", "=")
+        .replace("14", "\\")
+        .replace("24", "£")
+        .replace("16", "¤")
+        .replace("10", "|")
+        .replace("37", "µ")
+        .replace("19", ";")
+        .replace("18", "ç")
+        .replace("28", "@")
+        .replace("69", "à")
+        .replace("13", "é");
+
 
     let mut file = File::create(output_file).unwrap();
     let mut encoder = Encoder::new();
     let output = encoder.encode(compressed.as_bytes());
+    file.write_all(compressed.as_bytes()).unwrap();
 
-    if size_of_val(&output) < size_of_val(compressed.as_bytes()) {
-        file.write_all(&output).unwrap();
-    } else {
-        file.write_all(compressed.as_bytes()).unwrap();
-    }
+    // if size_of_val(&output) < size_of_val(compressed.as_bytes()) {
+    //     file.write_all(&output).unwrap();
+    // } else {
+    //     file.write_all(compressed.as_bytes()).unwrap();
+    // }
     println!(
         "\nSaved to {} - {}% of original size.",
         Colorize::blue(output_file),
