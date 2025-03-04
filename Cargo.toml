@@ -11,7 +11,7 @@ hex_color = "3.0.0"
 image = "0.25.5"
 json = "0.12.4"
 rayon = "1.10.0"
-mashi-core = "0.1.0"
+mashi-core = { version = "0.1.0", features = ["encoder"] }
 crossterm = "0.28.1"
 rfd = "0.15.2"
 bincode = "1.3.3"

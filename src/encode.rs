@@ -298,7 +298,7 @@ pub fn convert(
     let pixels = image.pixels();
 
     // put the pixels in a hashmap
-    let mut px_colors: HashMap<String, Vec<(u32, u32)>> = HashMap::default();
+    let mut px_colors: HashMap<String, Vec<(u32, u32)>> = HashMap::with_capacity(pixels.len());
     for w in tqdm!(pixels, desc = "Registering pixels") {
         let colors = w.channels();
         let color = optimize_hex_color(
@@ -314,6 +314,7 @@ pub fn convert(
             y += 1;
         }
     }
+
     // remove dominant color
     let bg_color = px_colors
         .iter()
@@ -326,8 +327,8 @@ pub fn convert(
     let mut outputf: String = format!("{width}%{height}%{bg_color}%");
 
     for (color, pixels) in tqdm!(px_colors.iter(), desc = "Compressing") {
-        let mut grouped_coords: HashMap<String, Vec<u32>> = HashMap::default();
-        let mut y_coords: HashMap<String, Vec<u32>> = HashMap::default();
+        let mut grouped_coords: HashMap<String, Vec<u32>> = HashMap::with_capacity(pixels.len());
+        let mut y_coords: HashMap<String, Vec<u32>> = HashMap::with_capacity(pixels.len());
         let mut is_y = false;
         for pixel in pixels {
             // group by abscissa
@@ -366,7 +367,10 @@ pub fn convert(
         's', 't', 'u', 'v', 'w', 'x', 'z', '&', '-',
     ];
     let mut compressed = remove_dup_patterns(outputf, 2, 4, &mut chars);
-    compressed = remove_dup_patterns(compressed, 2, 4, &mut chars);
+    for _ in 0..5 {
+        compressed = remove_dup_patterns(compressed, 2, 4, &mut chars);
+    }
+    // compressed = remove_dup_patterns(compressed, 2, 4, &mut chars);
     // compressed = compressed
     //     .replace("00", "^")
     //     .replace("01", "~")
@@ -395,7 +399,7 @@ pub fn convert(
     let mut encoder = Encoder::new();
     let output = encoder.encode(compressed.as_bytes());
 
-    if size_of_val(&output) > size_of_val(compressed.as_bytes()) {
+    if size_of_val(&output) < size_of_val(compressed.as_bytes()) {
         file.write_all(&output).unwrap();
     } else {
         file.write_all(compressed.as_bytes()).unwrap();
@@ -423,12 +427,8 @@ fn find_pattern(
 
     let mut new: Vec<_> = patterns.into_iter().collect();
     new.par_sort_by(|a, b| b.1.cmp(&a.1));
-    println!("PATTERNS {:?}", new.clone().into_iter()
-        .take(2)
-        .map(|(s, c)| (s.to_string(), c))
-        .collect::<Vec<_>>());
     new.into_iter()
-        .take(2)
+        .take(1)
         .map(|(s, c)| (s.to_string(), c))
         .collect()
 }
@@ -453,8 +453,8 @@ fn remove_dup_patterns(
     let mut use_letter = 0;
 
     let mut output = compressed;
-    for (pattern, _) in &worthy_patterns[0..1] {
-        if output.matches(pattern).count() > 2 {
+    for (pattern, savings) in &worthy_patterns[0..1] {
+        if output.matches(pattern).count() > 2 && savings > &100 {
             let letter = chars.remove(use_letter);
             output = output.replace(pattern, &letter.to_string());
             if use_letter == 0 && !output.contains("_") {
