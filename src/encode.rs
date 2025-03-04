@@ -361,37 +361,41 @@ pub fn convert(
             outputf.push_str(&sequenced);
         }
     }
-
-    let mut compressed = remove_dup_patterns(outputf, 2, 4);
-    compressed = compressed
-        .replace("00", "^")
-        .replace("01", "~")
-        .replace("11", "è")
-        .replace("42", "/")
-        .replace("42", "/")
-        .replace("17", "!")
-        .replace("23", "§")
-        .replace("12", ".")
-        .replace("27", "&")
-        .replace("22", "`")
-        .replace("21", "=")
-        .replace("14", "\\")
-        .replace("24", "£")
-        .replace("16", "¤")
-        .replace("10", "|")
-        .replace("37", "µ")
-        .replace("19", ";")
-        .replace("18", "ç")
-        .replace("28", "@")
-        .replace("69", "à")
-        .replace("13", "é");
+    let mut chars = vec![
+        'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r',
+        's', 't', 'u', 'v', 'w', 'x', 'z', '&', '-',
+    ];
+    let mut compressed = remove_dup_patterns(outputf, 2, 4, &mut chars);
+    compressed = remove_dup_patterns(compressed, 2, 4, &mut chars);
+    // compressed = compressed
+    //     .replace("00", "^")
+    //     .replace("01", "~")
+    //     .replace("11", "è")
+    //     .replace("42", "/")
+    //     .replace("42", "/")
+    //     .replace("17", "!")
+    //     .replace("23", "§")
+    //     .replace("12", ".")
+    //     .replace("27", "&")
+    //     .replace("22", "`")
+    //     .replace("21", "=")
+    //     .replace("14", "\\")
+    //     .replace("24", "£")
+    //     .replace("16", "¤")
+    //     .replace("10", "|")
+    //     .replace("37", "µ")
+    //     .replace("19", ";")
+    //     .replace("18", "ç")
+    //     .replace("28", "@")
+    //     .replace("69", "à")
+    //     .replace("13", "é");
 
 
     let mut file = File::create(output_file).unwrap();
     let mut encoder = Encoder::new();
     let output = encoder.encode(compressed.as_bytes());
 
-    if size_of_val(&output) < size_of_val(compressed.as_bytes()) {
+    if size_of_val(&output) > size_of_val(compressed.as_bytes()) {
         file.write_all(&output).unwrap();
     } else {
         file.write_all(compressed.as_bytes()).unwrap();
@@ -419,6 +423,10 @@ fn find_pattern(
 
     let mut new: Vec<_> = patterns.into_iter().collect();
     new.par_sort_by(|a, b| b.1.cmp(&a.1));
+    println!("PATTERNS {:?}", new.clone().into_iter()
+        .take(2)
+        .map(|(s, c)| (s.to_string(), c))
+        .collect::<Vec<_>>());
     new.into_iter()
         .take(2)
         .map(|(s, c)| (s.to_string(), c))
@@ -430,6 +438,7 @@ fn remove_dup_patterns(
     compressed: String,
     #[maybe_const(dispatch = min_pattern_size, consts = [2,3,4,5,6,7])] min_pattern_size: usize,
     #[maybe_const(dispatch = max_pattern_size, consts = [2,3,4,5,6,7])] max_pattern_size: usize,
+    chars: &mut Vec<char>
 ) -> String {
     let mut worthy_patterns: Vec<(String, isize)> = Vec::new();
     (min_pattern_size..=max_pattern_size).for_each(|step| {
@@ -442,16 +451,13 @@ fn remove_dup_patterns(
     });
     worthy_patterns.par_sort_by(|a, b| b.1.cmp(&a.1));
     let mut use_letter = 0;
-    static CHARS: [char; 27] = [
-        'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r',
-        's', 't', 'u', 'v', 'w', 'x', 'z', '&', '-',
-    ];
+
     let mut output = compressed;
     for (pattern, _) in &worthy_patterns[0..1] {
         if output.matches(pattern).count() > 2 {
-            let letter = CHARS[use_letter];
+            let letter = chars.remove(use_letter);
             output = output.replace(pattern, &letter.to_string());
-            if use_letter == 0 {
+            if use_letter == 0 && !output.contains("_") {
                 output.push('_');
             }
             output.push_str(&format!("${pattern}${letter}"));

@@ -89,18 +89,10 @@ pub fn decode(
         let mut output: String = matcher[0].to_string();
         let letters = matcher[1];
 
-        let mut parts: Vec<&str> = letters.split('$').collect();
-        parts.retain(|x| !x.is_empty());
-        let couples: Vec<(String, String)> = parts
-            .iter()
-            .zip(parts.iter().skip(1))
-            .map(|(a, b)| ((*b).to_string(), (*a).to_string()))
-            .rev()
-            .collect();
-
-        for (by, to) in couples {
-            output = output.replace(&by, &to);
-        }
+        let parts: Vec<&str> = letters.split('$').filter(|x| !x.is_empty()).collect();
+        parts.chunks(2).map(|a| (a[1], a[0])).rev().for_each(|(by, to)| {
+            output = output.replace(by, to);
+        });
         result = output;
     }
 
@@ -108,7 +100,6 @@ pub fn decode(
     let width: u32 = colors.remove(0).parse().unwrap();
     let height: u32 = colors.remove(0).parse().unwrap();
     let bg_color = colors.remove(0);
-    println!("bg {bg_color}");
     let mut output = RgbaImage::from_pixel(
         width,
         height,
@@ -117,8 +108,7 @@ pub fn decode(
         )),
     );
 
-    let mut colors: Vec<String> = colors.remove(0).split('#').map(ToString::to_string).collect();
-    colors.retain(|x| !x.is_empty());
+    let mut colors: Vec<String> = colors.remove(0).split('#').map(ToString::to_string).filter(|x| !x.is_empty()).collect();
     for x in tqdm!(colors.iter_mut()) {
         let mut is_y = false;
         if x.ends_with('y') {
@@ -143,8 +133,8 @@ pub fn decode(
                         .trim_end_matches(',')
                         .trim_end_matches(')')
                 })
+                .filter(|x| !x.is_empty())
                 .collect();
-            pixels.retain(|x| !x.is_empty());
             for pixel in pixels {
                 let split: Vec<&str> = pixel.split(',').collect();
                 let x = split[0].parse().unwrap();

@@ -7,6 +7,7 @@ mod data;
 mod decode;
 mod encode;
 
+use crate::data::compare;
 use crate::decode::decode;
 use crate::encode::convert;
 use colored::{ColoredString, Colorize};
@@ -531,5 +532,5 @@ fn main() {
             false,
         );
     }
-    disable_raw_mode().unwrap();
+    // disable_raw_mode().unwrap();
 }

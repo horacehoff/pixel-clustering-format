@@ -57,7 +57,7 @@ pub fn compare(args: &[String]) {
                             convert(
                                 entry.path().to_str().unwrap(),
                                 "test.pcf",
-                                false,
+                                true,
                                 b1,
                                 b2,
                                 b3,
@@ -75,16 +75,16 @@ pub fn compare(args: &[String]) {
     let mut file = File::open("data.txt").unwrap();
     let mut buffer: Vec<u8> = Vec::new();
     file.read_to_end(&mut buffer).unwrap();
-    // if !buffer.is_empty() {
+    if !buffer.is_empty() {
     let result: (Vec<String>, Vec<usize>, Vec<usize>, Vec<usize>) =
         bincode::deserialize(&buffer).unwrap();
     name = result.0;
     original = result.1;
     compressed = result.2;
     compressed_lossy = result.3;
-    // }
+    }
 
-    let entries = fs::read_dir("../png_comparisons/test-images/").unwrap();
+    let entries = fs::read_dir("./png_comparisons/test-images/").unwrap();
     for entry in entries {
         let fuck = entry.unwrap();
         if fuck
