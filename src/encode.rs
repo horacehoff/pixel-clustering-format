@@ -367,7 +367,7 @@ pub fn convert(
         's', 't', 'u', 'v', 'w', 'x', 'z', '&', '-',
     ];
     let mut compressed = remove_dup_patterns(outputf, 2, 4, &mut chars);
-    for _ in 0..5 {
+    for _ in 0..7 {
         compressed = remove_dup_patterns(compressed, 2, 4, &mut chars);
     }
     // compressed = remove_dup_patterns(compressed, 2, 4, &mut chars);
@@ -399,6 +399,8 @@ pub fn convert(
     let mut encoder = Encoder::new();
     let output = encoder.encode(compressed.as_bytes());
 
+    println!("{output:?}");
+
     if size_of_val(&output) < size_of_val(compressed.as_bytes()) {
         file.write_all(&output).unwrap();
     } else {
@@ -407,7 +409,7 @@ pub fn convert(
     println!(
         "\nSaved to {} - {}% of original size.",
         Colorize::blue(output_file),
-        (fs::metadata(output_file).unwrap().len() * 100 / fs::metadata(path).unwrap().len())
+        ((fs::metadata(output_file).unwrap().len() as f64) * 100.0 / fs::metadata(path).unwrap().len() as f64)
             .to_string()
             .blue()
     );
@@ -454,7 +456,7 @@ fn remove_dup_patterns(
 
     let mut output = compressed;
     for (pattern, savings) in &worthy_patterns[0..1] {
-        if output.matches(pattern).count() > 2 && savings > &100 {
+        if output.matches(pattern).count() > 2 && savings > &0 {
             let letter = chars.remove(use_letter);
             output = output.replace(pattern, &letter.to_string());
             if use_letter == 0 && !output.contains("_") {
