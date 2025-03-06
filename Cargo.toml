@@ -1,7 +1,7 @@
 [package]
 name = "pixel-clustering-format"
 version = "1.0.0"
-edition = "2021"
+edition = "2024"
 
 [dependencies]
 ahash = "0.8.11"
@@ -20,6 +20,8 @@ kdam = "0.6.2"
 egui = "0.31.0"
 eframe = "0.31.0"
 huffman-coding = "0.1.2"
+lzss = "0.9.1"
+lz4-compression = "0.7.0"
 
 [profile.dev]
 codegen-units = 512

@@ -10,6 +10,7 @@ use rayon::prelude::ParallelSliceMut;
 use std::fs;
 use std::fs::File;
 use std::io::Write;
+use lzss::{Lzss, SliceReader, SliceWriter};
 
 fn optimize_math_str(input: &str) -> String {
     let mut nums: Vec<&str> = input.split('+').filter(|s| !s.is_empty()).collect();
@@ -366,10 +367,11 @@ pub fn convert(
         'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r',
         's', 't', 'u', 'v', 'w', 'x', 'z', '&', '-',
     ];
-    let mut compressed = remove_dup_patterns(outputf, 2, 4, &mut chars);
-    for _ in 0..7 {
-        compressed = remove_dup_patterns(compressed, 2, 4, &mut chars);
-    }
+    // let compressed = outputf;
+    let mut compressed = remove_dup_patterns(outputf, 2, 10, &mut chars);
+    // for _ in 0..7 {
+    //     compressed = remove_dup_patterns(compressed, 2, 4, &mut chars);
+    // }
     // compressed = remove_dup_patterns(compressed, 2, 4, &mut chars);
     // compressed = compressed
     //     .replace("00", "^")
@@ -399,9 +401,10 @@ pub fn convert(
     let mut encoder = Encoder::new();
     let output = encoder.encode(compressed.as_bytes());
 
-    println!("{output:?}");
+    // println!("{output:?}");
 
     if size_of_val(&output) < size_of_val(compressed.as_bytes()) {
+        // let output_bytes = lz4_compression::prelude::compress(&output);
         file.write_all(&output).unwrap();
     } else {
         file.write_all(compressed.as_bytes()).unwrap();
