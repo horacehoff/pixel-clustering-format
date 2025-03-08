@@ -446,17 +446,18 @@ fn remove_dup_patterns(
     (min_pattern_size..=max_pattern_size).for_each(|step| {
         for (pattern, count) in find_pattern(compressed.to_string(), step) {
             if count != 1 {
-                let savings: isize = (count as isize) * (pattern.len() as isize - 2) - 1;
+                let savings: isize = (count as isize) * (pattern.len() as isize - 2) - 3;
                 worthy_patterns.push((pattern, savings));
             }
         }
     });
     worthy_patterns.par_sort_by(|a, b| b.1.cmp(&a.1));
+    println!("PATTERNs {worthy_patterns:?}");
     let mut use_letter = 0;
 
     let mut output = compressed;
     for (pattern, savings) in &worthy_patterns[0..1] {
-        if output.matches(pattern).count() > 2 && savings > &0 {
+        if output.matches(pattern).count() > 2 && savings > &10 {
             let letter = chars.remove(use_letter);
             output = output.replace(pattern, &letter.to_string());
             if use_letter == 0 && !output.contains("_") {
