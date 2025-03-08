@@ -19,9 +19,6 @@ clearscreen = "4.0.1"
 kdam = "0.6.2"
 egui = "0.31.0"
 eframe = "0.31.0"
-huffman-coding = "0.1.2"
-lzss = "0.9.1"
-lz4-compression = "0.7.0"
 
 [profile.dev]
 codegen-units = 512

@@ -10,7 +10,6 @@ use rayon::prelude::ParallelSliceMut;
 use std::fs;
 use std::fs::File;
 use std::io::Write;
-use lzss::{Lzss, SliceReader, SliceWriter};
 
 fn optimize_math_str(input: &str) -> String {
     let mut nums: Vec<&str> = input.split('+').filter(|s| !s.is_empty()).collect();
@@ -401,10 +400,8 @@ pub fn convert(
     let mut encoder = Encoder::new();
     let output = encoder.encode(compressed.as_bytes());
 
-    // println!("{output:?}");
 
     if size_of_val(&output) < size_of_val(compressed.as_bytes()) {
-        // let output_bytes = lz4_compression::prelude::compress(&output);
         file.write_all(&output).unwrap();
     } else {
         file.write_all(compressed.as_bytes()).unwrap();

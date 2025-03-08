@@ -528,14 +528,8 @@ version = "0.8.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "08807e080ed7f9d5433fa9b275196cfc35414f66a0c79d864dc51a0d825231a3"
 dependencies = [
- "bit-vec 0.8.0",
+ "bit-vec",
 ]
-
-[[package]]
-name = "bit-vec"
-version = "0.4.4"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "02b4ff8b16e6076c3e14220b39fbc1fabb6737522281a388998046859400895f"
 
 [[package]]
 name = "bit-vec"
@@ -569,12 +563,6 @@ name = "bitstream-io"
 version = "2.6.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "6099cdc01846bc367c4e7dd630dc5966dccf36b652fae7a74e17b640411a91b2"
-
-[[package]]
-name = "bitstream-rs"
-version = "0.1.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "54849349a823b99f614be12e1e1b49fda6a6b2861c5a1d74cfb09e9658cba7f9"
 
 [[package]]
 name = "block"
@@ -1700,16 +1688,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "huffman-coding"
-version = "0.1.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "bd43974ad95725c17acfb87d4244c6f2eadec51262e7d200695582af7cd3c4cd"
-dependencies = [
- "bit-vec 0.4.4",
- "bitstream-rs",
-]
-
-[[package]]
 name = "icu_collections"
 version = "1.5.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2096,21 +2074,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "0fae87c125b03c1d2c0150c90365d7d6bcc53fb73a9acaef207d2d065860f062"
 dependencies = [
  "imgref",
-]
-
-[[package]]
-name = "lz4-compression"
-version = "0.7.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "761104bf97f13a3caf47d822498a0760a10d00d220148bac2669f63fc3bb8270"
-
-[[package]]
-name = "lzss"
-version = "0.9.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "ffcbd9e87fc27b574d4e37d4bf0d302828391f80ea3762dfce02d808fa257a01"
-dependencies = [
- "void",
 ]
 
 [[package]]
@@ -2768,12 +2731,9 @@ dependencies = [
  "eframe",
  "egui",
  "hex_color",
- "huffman-coding",
  "image",
  "json",
  "kdam",
- "lz4-compression",
- "lzss",
  "mashi-core",
  "rayon",
  "rfd",
@@ -3706,12 +3666,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "0b928f33d975fc6ad9f86c8f283853ad26bdd5b10b7f1542aa2fa15e2289105a"
 
 [[package]]
-name = "void"
-version = "1.0.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "6a02e4885ed3bc0f2de90ea6dd45ebcbb66dacffe03547fadbb0eeae2770887d"
-
-[[package]]
 name = "walkdir"
 version = "2.5.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3992,7 +3946,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "671c25545d479b47d3f0a8e373aceb2060b67c6eb841b24ac8c32348151c7a0c"
 dependencies = [
  "arrayvec",
- "bit-vec 0.8.0",
+ "bit-vec",
  "bitflags 2.8.0",
  "cfg_aliases",
  "document-features",
