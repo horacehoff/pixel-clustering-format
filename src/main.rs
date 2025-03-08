@@ -386,7 +386,7 @@ fn gui() {
     options.viewport.icon = Some(Arc::from(IconData::default()));
     options.viewport.inner_size = Option::from(Vec2::new(310.0, 458.0));
     options.viewport.resizable = Option::from(false);
-    eframe::run_simple_native("Pixel Clustering Format", options, move |ctx, _frame| {
+    eframe::run_simple_native("Pixel Clustering Format - GUI 3000", options, move |ctx, _frame| {
         ctx.set_zoom_factor(1.1);
         egui::CentralPanel::default().show(ctx, |ui| {
             ui.label("Pixel Clustering Format");

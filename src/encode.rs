@@ -368,7 +368,7 @@ pub fn convert(
         's', 't', 'u', 'v', 'w', 'x', 'z', '&', '-',
     ];
     // let compressed = outputf;
-    let mut compressed = remove_dup_patterns(outputf, 2, 10, &mut chars);
+    let compressed = remove_dup_patterns(outputf, 2, 10, &mut chars);
     // for _ in 0..7 {
     //     compressed = remove_dup_patterns(compressed, 2, 4, &mut chars);
     // }
