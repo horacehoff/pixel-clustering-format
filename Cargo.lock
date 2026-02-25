@@ -1770,6 +1770,18 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "dfa686283ad6dd069f105e5ab091b04c62850d3e4cf5d67debad1933f55023df"
 
 [[package]]
+<<<<<<< HEAD
+=======
+name = "home"
+version = "0.5.11"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "589533453244b0995c858700322199b2becb13b627df2851f64a2775d024abcf"
+dependencies = [
+ "windows-sys 0.59.0",
+]
+
+[[package]]
+>>>>>>> de8db5a8dea5f641dd710e602cd32a562951f65d
 name = "icu_collections"
 version = "1.5.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2928,6 +2940,10 @@ dependencies = [
  "image",
  "json",
  "kdam",
+<<<<<<< HEAD
+=======
+ "mashi-core",
+>>>>>>> de8db5a8dea5f641dd710e602cd32a562951f65d
  "rayon",
  "rfd",
  "rkyv",
@@ -4235,10 +4251,15 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "27a75de515543b1897b26119f93731b385a19aea165a1ec5f0e3acecc229cae7"
 dependencies = [
  "arrayvec",
+<<<<<<< HEAD
  "bit-set",
  "bit-vec",
  "bitflags 2.11.0",
  "bytemuck",
+=======
+ "bit-vec",
+ "bitflags 2.8.0",
+>>>>>>> de8db5a8dea5f641dd710e602cd32a562951f65d
  "cfg_aliases",
  "document-features",
  "hashbrown 0.16.1",
