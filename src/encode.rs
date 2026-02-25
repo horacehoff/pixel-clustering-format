@@ -3,14 +3,13 @@ use colored::Colorize;
 use const_currying::const_currying;
 use crossterm::style::Stylize;
 use hex_color::HexColor;
-use image::{open, Pixel, Rgba, RgbaImage};
+use image::{Pixel, Rgba, RgbaImage, open};
 use kdam::tqdm;
-use mashi_core::Encoder;
 use rayon::prelude::ParallelSliceMut;
 use std::fs;
 use std::fs::File;
 use std::io::Write;
-use lzss::{Lzss, SliceReader, SliceWriter};
+use zpaq_rs::compress_to_vec;
 
 fn optimize_math_str(input: &str) -> String {
     let mut nums: Vec<&str> = input.split('+').filter(|s| !s.is_empty()).collect();
@@ -336,11 +335,9 @@ pub fn convert(
             let key = format!("{}", pixel.0);
             grouped_coords.entry(key).or_default().push(pixel.1);
 
-
             // group by ordinate
             let key = format!("{}", pixel.1);
             y_coords.entry(key).or_default().push(pixel.0);
-
         }
         if size_of_val(&grouped_coords) > size_of_val(&y_coords) {
             grouped_coords = y_coords;
@@ -367,8 +364,8 @@ pub fn convert(
         'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r',
         's', 't', 'u', 'v', 'w', 'x', 'z', '&', '-',
     ];
-    // let compressed = outputf;
     let compressed = remove_dup_patterns(outputf, 2, 10, &mut chars);
+    // EXPERIMENTAL
     // for _ in 0..7 {
     //     compressed = remove_dup_patterns(compressed, 2, 4, &mut chars);
     // }
@@ -396,11 +393,10 @@ pub fn convert(
     //     .replace("69", "à")
     //     .replace("13", "é");
 
-
     let mut file = File::create(output_file).unwrap();
-    let mut encoder = Encoder::new();
-    let output = encoder.encode(compressed.as_bytes());
-
+    // let mut encoder = Encoder::new();
+    // let output = encoder.encode(compressed.as_bytes());
+    let output = compress_to_vec(compressed.as_bytes(), "5").unwrap();
     // println!("{output:?}");
 
     if size_of_val(&output) < size_of_val(compressed.as_bytes()) {
@@ -412,7 +408,8 @@ pub fn convert(
     println!(
         "\nSaved to {} - {}% of original size.",
         Colorize::blue(output_file),
-        ((fs::metadata(output_file).unwrap().len() as f64) * 100.0 / fs::metadata(path).unwrap().len() as f64)
+        ((fs::metadata(output_file).unwrap().len() as f64) * 100.0
+            / fs::metadata(path).unwrap().len() as f64)
             .to_string()
             .blue()
     );
@@ -443,7 +440,7 @@ fn remove_dup_patterns(
     compressed: String,
     #[maybe_const(dispatch = min_pattern_size, consts = [2,3,4,5,6,7])] min_pattern_size: usize,
     #[maybe_const(dispatch = max_pattern_size, consts = [2,3,4,5,6,7])] max_pattern_size: usize,
-    chars: &mut Vec<char>
+    chars: &mut Vec<char>,
 ) -> String {
     let mut worthy_patterns: Vec<(String, isize)> = Vec::new();
     (min_pattern_size..=max_pattern_size).for_each(|step| {

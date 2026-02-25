@@ -11,7 +11,7 @@ use crate::data::compare;
 use crate::decode::decode;
 use crate::encode::convert;
 use colored::{ColoredString, Colorize};
-use crossterm::event::{poll, read, Event, KeyCode, KeyEventKind, KeyModifiers};
+use crossterm::event::{Event, KeyCode, KeyEventKind, KeyModifiers, poll, read};
 use crossterm::terminal::disable_raw_mode;
 use egui::{IconData, Vec2};
 use rfd::FileDialog;
@@ -189,7 +189,10 @@ fn display_menu(
                 extra_radius.to_string()
             },
             if *sel == 4 {
-                format!("{}", extra_extra_radius.to_string().bright_blue().underline())
+                format!(
+                    "{}",
+                    extra_extra_radius.to_string().bright_blue().underline()
+                )
             } else {
                 extra_extra_radius.to_string()
             },
@@ -222,22 +225,10 @@ fn display_menu(
                 Colorize::white("Choose file")
             },
             if *sel == 1 {
-                Colorize::underline({
-                    if *selected_lossy {
-                        "Lossy"
-                    } else {
-                        "Lossless"
-                    }
-                })
+                Colorize::underline({ if *selected_lossy { "Lossy" } else { "Lossless" } })
                     .bright_blue()
             } else {
-                Colorize::white({
-                    if *selected_lossy {
-                        "Lossy"
-                    } else {
-                        "Lossless"
-                    }
-                })
+                Colorize::white({ if *selected_lossy { "Lossy" } else { "Lossless" } })
             },
             if *selected_lossy {
                 if *sel == 2 {
@@ -355,8 +346,8 @@ fn tui() {
                     } else if event.code == KeyCode::Esc
                         || event.code == KeyCode::Char('q')
                         || (event.modifiers == KeyModifiers::CONTROL
-                        && (event.code == KeyCode::Char('c')
-                        || event.code == KeyCode::Char('z')))
+                            && (event.code == KeyCode::Char('c')
+                                || event.code == KeyCode::Char('z')))
                     {
                         disable_raw_mode().unwrap();
                         exit(0);

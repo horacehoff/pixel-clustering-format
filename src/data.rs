@@ -1,3 +1,5 @@
+use rkyv::rancor::Error;
+
 use crate::encode::convert;
 use std::fs;
 use std::fs::{DirEntry, File, OpenOptions};
@@ -76,12 +78,13 @@ pub fn compare(args: &[String]) {
     let mut buffer: Vec<u8> = Vec::new();
     file.read_to_end(&mut buffer).unwrap();
     if !buffer.is_empty() {
-    let result: (Vec<String>, Vec<usize>, Vec<usize>, Vec<usize>) =
-        bincode::deserialize(&buffer).unwrap();
-    name = result.0;
-    original = result.1;
-    compressed = result.2;
-    compressed_lossy = result.3;
+        type ExpectedResult = (Vec<String>, Vec<usize>, Vec<usize>, Vec<usize>);
+        let result: (Vec<String>, Vec<usize>, Vec<usize>, Vec<usize>) =
+            rkyv::from_bytes::<ExpectedResult, Error>(&buffer).unwrap();
+        name = result.0;
+        original = result.1;
+        compressed = result.2;
+        compressed_lossy = result.3;
     }
 
     let entries = fs::read_dir("./png_comparisons/test-images/").unwrap();
@@ -107,7 +110,8 @@ pub fn compare(args: &[String]) {
     println!("{original:?}");
     println!("{compressed:?}");
     println!("{compressed_lossy:?}");
-    let encoded = bincode::serialize(&(name, original, compressed, compressed_lossy)).unwrap();
+    let encoded = rkyv::to_bytes::<Error>(&(name, original, compressed, compressed_lossy)).unwrap();
+    // let encoded = bincode::serialize(&(name, original, compressed, compressed_lossy)).unwrap();
     let mut file = OpenOptions::new()
         .write(true)
         .truncate(true)

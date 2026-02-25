@@ -1,9 +1,9 @@
 use colored::Colorize;
 use image::RgbaImage;
 use kdam::tqdm;
-use mashi_core::Decoder;
 use std::fs::File;
 use std::io::Read;
+use zpaq_rs::decompress_to_vec;
 
 pub fn expand_math(s: &str) -> String {
     let parts: Vec<String> = s.split('+').map(ToString::to_string).collect();
@@ -41,10 +41,7 @@ pub fn math_to_vec(s: &str) -> Vec<String> {
     output
 }
 
-pub fn decode(
-    path: String,
-    output_file: &str,
-) {
+pub fn decode(path: String, output_file: &str) {
     println!("PCF -- Decoding {}...", path.blue());
     let mut input = File::open(path).unwrap();
     let mut contents = vec![];
@@ -57,12 +54,14 @@ pub fn decode(
     if test.contains('%') && test.contains('#') {
         result = test;
     } else {
-        let mut decoder = Decoder::new();
-        let decompressed = decoder.decode(&contents);
-        result = String::from_utf8(decompressed.to_vec()).unwrap();
+        // let mut decoder = Decoder::new();
+        // let decompressed = decoder.decode(&contents);
+        result = String::from_utf8(decompress_to_vec(&contents).unwrap()).unwrap();
+        // result = String::from_utf8(decompressed.to_vec()).unwrap();
     }
 
-    result = result.replace("é", "13")
+    result = result
+        .replace("é", "13")
         .replace("à", "69")
         .replace("@", "28")
         .replace("ç", "18")
@@ -82,7 +81,7 @@ pub fn decode(
         .replace("è", "11")
         .replace("~", "01")
         .replace("^", "00");
-    
+
     // if some letters need to be replaced, replace them
     if result.contains('_') {
         let matcher = result.split('_').collect::<Vec<&str>>();
@@ -90,9 +89,13 @@ pub fn decode(
         let letters = matcher[1];
 
         let parts: Vec<&str> = letters.split('$').filter(|x| !x.is_empty()).collect();
-        parts.chunks(2).map(|a| (a[1], a[0])).rev().for_each(|(by, to)| {
-            output = output.replace(by, to);
-        });
+        parts
+            .chunks(2)
+            .map(|a| (a[1], a[0]))
+            .rev()
+            .for_each(|(by, to)| {
+                output = output.replace(by, to);
+            });
         result = output;
     }
 
@@ -108,7 +111,12 @@ pub fn decode(
         )),
     );
 
-    let mut colors: Vec<String> = colors.remove(0).split('#').map(ToString::to_string).filter(|x| !x.is_empty()).collect();
+    let mut colors: Vec<String> = colors
+        .remove(0)
+        .split('#')
+        .map(ToString::to_string)
+        .filter(|x| !x.is_empty())
+        .collect();
     for x in tqdm!(colors.iter_mut()) {
         let mut is_y = false;
         if x.ends_with('y') {
