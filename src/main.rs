@@ -384,7 +384,7 @@ fn gui() {
             ui.label("by Horace Hoff");
             ui.horizontal(|ui| {
                 ui.hyperlink_to("GitHub", "https://github.com/horacehoff/pixel-clustering-format");
-                ui.hyperlink_to("Website", "https://horacehoff.github.io");
+                ui.hyperlink_to("Website", "https://horacehoff.com");
             });
             ui.add_space(5.0);
             ui.horizontal_top(|ui| {
